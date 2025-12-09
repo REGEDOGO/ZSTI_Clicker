@@ -35,7 +35,12 @@ import {
   X,
   FlaskConical,
   Coffee,
-  CircuitBoard
+  CircuitBoard,
+  Fan,
+  Plug,
+  StickyNote,
+  FileText,
+  Award
 } from 'lucide-react';
 
 // --- DATA CONSTANTS ---
@@ -273,6 +278,14 @@ const UPGRADES_DATA = [
 ];
 
 // --- EVOLUTION DATA (LABORATORIUM) ---
+const RESEARCH_DATA = [
+  { id: 'caffeine_research', name: "Badania nad Kofeiną", cost: 500, desc: "Odblokowuje kubek z kawą.", icon: Coffee, type: "unlock" },
+  { id: 'overclock_license', name: "Licencja na Podkręcanie", cost: 2000, desc: "Odblokowuje przycisk Overclock w Serwerowni.", icon: Zap, type: "unlock" },
+  { id: 'it_certificate', name: "Certyfikat Informatyka", cost: 10000, desc: "Odblokowuje Tier 2 w Sklepie Sprzętowym.", icon: Award, type: "unlock" },
+  { id: 'bigger_mug', name: "Większy Kubek", cost: 5000, desc: "Dłuższy czas działania kawy (+50%).", req: 'caffeine_research', type: 'coffee_duration' },
+  { id: 'stronger_brew', name: "Mocniejsza Parzona", cost: 15000, desc: "Zwiększa mnożnik kawy do +100%.", req: 'caffeine_research', type: 'coffee_power' }
+];
+
 const ITEM_EVOLUTIONS = {
   chalk: [
     { tier: 0, name: "Złamana Kreda", multiplier: 1, imgColor: "4ade80" },
@@ -317,6 +330,21 @@ const HARDWARE_DATA = {
     { id: 'cpu_1', name: "Procesor Ziemniaczany", desc: "Frytki gratis. Mnożnik Krytyka +1.5x", multiplier: 1.5, cost: 5000 },
     { id: 'cpu_2', name: "Intel Core i-Nierodka", desc: "Szybki. Mnożnik Krytyka +3.0x", multiplier: 3.0, cost: 100000 },
     { id: 'cpu_3', name: "Kwantowy Mózg", desc: "Superpozycja. Mnożnik Krytyka +10.0x", multiplier: 10.0, cost: 10000000 },
+  ],
+  ram: [
+    { id: 'ram_1', name: "Karteczka Samoprzylepna", desc: "Ryzyko -5%", riskReduction: 0.05, cost: 500 },
+    { id: 'ram_2', name: "RAM Ściągnięty z Internetu", desc: "Ryzyko -15%", riskReduction: 0.15, cost: 5000 },
+    { id: 'ram_3', name: "Mózg Prymusa", desc: "Ryzyko -50%", riskReduction: 0.50, cost: 50000 },
+  ],
+  cooling: [
+    { id: 'cool_1', name: "Dmuchanie na Procesor", desc: "+5s czasu", durationAdd: 5, cost: 1000 },
+    { id: 'cool_2', name: "Wiatrak Biurowy z PRL", desc: "+15s czasu", durationAdd: 15, cost: 15000 },
+    { id: 'cool_3', name: "Otwarte Okno w Zimie", desc: "+40s czasu", durationAdd: 40, cost: 200000 },
+  ],
+  power: [
+    { id: 'psu_1', name: "Chomik w Kołowrotku", desc: "Mnożnik 2.2x", multiplier: 2.2, cost: 2000 },
+    { id: 'psu_2', name: "Kabel od Sąsiada", desc: "Mnożnik 3.0x", multiplier: 3.0, cost: 25000 },
+    { id: 'psu_3', name: "Mini-Reaktor Czarnobylski", desc: "Mnożnik 5.0x", multiplier: 5.0, cost: 500000 },
   ]
 };
 
@@ -349,15 +377,20 @@ export default function App() {
     monitor: 0,
     keyboard: 0,
     gpu: 0,
-    cpu: 0
+    cpu: 0,
+    ram: 0,
+    cooling: 0,
+    power: 0
   });
 
-  // Item Evolutions State
+  // Lab State
   const [itemEvolutions, setItemEvolutions] = useState({
     chalk: 0,
     sponge: 0,
     quiz: 0
   });
+  const [unlockedResearch, setUnlockedResearch] = useState([]);
+  const [hasNewLabItem, setHasNewLabItem] = useState(false);
 
   // Coffee Mechanic State
   const [coffeeLevel, setCoffeeLevel] = useState(100); // 0-100%
@@ -416,7 +449,8 @@ export default function App() {
         setPrestigeLevel(data.prestigeLevel || 0);
         setHardware(prev => ({ ...prev, ...(data.hardware || {}) }));
         setItemEvolutions(prev => ({ ...prev, ...(data.itemEvolutions || {}) }));
-        
+        setUnlockedResearch(data.unlockedResearch || []);
+
         setOwnedThemes(data.ownedThemes || ['default']);
         setOwnedMusic(data.ownedMusic || ['silence']);
         setActiveThemeId(data.activeThemeId || 'default');
@@ -453,6 +487,7 @@ export default function App() {
       prestigeLevel,
       hardware,
       itemEvolutions,
+      unlockedResearch,
       upgrades: upgrades.map(({ id, level, currentCost }) => ({ id, level, currentCost })),
       ownedThemes,
       ownedMusic,
@@ -461,7 +496,7 @@ export default function App() {
       volume
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-  }, [points, upgrades, hardware, itemEvolutions, ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume, totalClicks, totalEarnings, totalPlayTime, unlockedAchievements, prestigeLevel]);
+  }, [points, upgrades, hardware, itemEvolutions, unlockedResearch, ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume, totalClicks, totalEarnings, totalPlayTime, unlockedAchievements, prestigeLevel]);
 
   // --- STATS CALCULATION ---
   useEffect(() => {
@@ -503,15 +538,23 @@ export default function App() {
 
     // Overclock
     if (overclockTime > 0) {
-      globalMultiplier *= 2;
+      let ocMult = 2.0;
+      if (hardware.power > 0) {
+         ocMult = HARDWARE_DATA.power[hardware.power - 1].multiplier;
+      }
+      globalMultiplier *= ocMult;
     }
 
     // Coffee Effects
     const now = Date.now();
     if (now < coffeeBuffEndTime) {
-      globalMultiplier *= 1.5; // +50% Buff
-    } else if (coffeeLevel <= 0) {
-      globalMultiplier *= 0.5; // -50% Debuff (Sleepy)
+      let coffeeMult = 1.5; // Base +50%
+      if (unlockedResearch.includes('stronger_brew')) {
+          coffeeMult = 2.0; // +100%
+      }
+      globalMultiplier *= coffeeMult;
+    } else if (coffeeLevel <= 0 && unlockedResearch.includes('caffeine_research')) {
+      globalMultiplier *= 0.5; // -50% Debuff (Sleepy) - only if coffee is unlocked
     }
 
     // Crash Penalty
@@ -559,7 +602,14 @@ export default function App() {
       if (overclockTime > 0) {
         setOverclockTime(prev => {
           if (prev <= 1) {
-            if (Math.random() < 0.3) {
+            // Calculate Crash Risk
+            let baseRisk = 0.3;
+            if (hardware.ram > 0) {
+                baseRisk -= HARDWARE_DATA.ram[hardware.ram - 1].riskReduction;
+            }
+            baseRisk = Math.max(0, baseRisk);
+
+            if (Math.random() < baseRisk) {
               setIsCrashed(true);
               setCrashTime(10);
             }
@@ -570,7 +620,9 @@ export default function App() {
       }
 
       // Coffee Drain: Drains in 60 seconds (approx 1.6% per sec)
-      setCoffeeLevel(prev => Math.max(0, prev - 1.6));
+      if (unlockedResearch.includes('caffeine_research')) {
+          setCoffeeLevel(prev => Math.max(0, prev - 1.6));
+      }
 
       // Auto Points
       if (autoPoints > 0) {
@@ -713,6 +765,11 @@ export default function App() {
       const newUpgrades = [...upgrades];
       newUpgrades[upgradeIndex] = { ...upgrade, level: newLevel, currentCost: newCost };
       setUpgrades(newUpgrades);
+
+      // Notification logic for Lab
+      if (upgrade.level === 0 && ITEM_EVOLUTIONS[upgradeId]) {
+          setHasNewLabItem(true);
+      }
     }
   };
 
@@ -734,14 +791,31 @@ export default function App() {
     }
   };
 
+  const buyResearch = (resId) => {
+    const res = RESEARCH_DATA.find(r => r.id === resId);
+    if (res && points >= res.cost && !unlockedResearch.includes(resId)) {
+        setPoints(p => p - res.cost);
+        setUnlockedResearch(prev => [...prev, resId]);
+        alert(`Ukończono badania: ${res.name}`);
+    }
+  };
+
   const activateOverclock = () => {
-    setOverclockTime(30);
+    let duration = 30;
+    if (hardware.cooling > 0) {
+        duration += HARDWARE_DATA.cooling[hardware.cooling - 1].durationAdd;
+    }
+    setOverclockTime(duration);
   };
 
   const drinkCoffee = () => {
     if (coffeeLevel < 100) {
       setCoffeeLevel(100);
-      setCoffeeBuffEndTime(Date.now() + 5000); // 5 seconds boost
+      let duration = 5000;
+      if (unlockedResearch.includes('bigger_mug')) {
+          duration = 7500; // +50%
+      }
+      setCoffeeBuffEndTime(Date.now() + duration);
       setTotalCoffees(prev => prev + 1);
       
       // Floating text for coffee
@@ -1059,33 +1133,35 @@ export default function App() {
                     </h2>
                     
                     {/* Coffee Mug Widget */}
-                    <div className="absolute top-6 right-6 z-20">
-                      <motion.button 
-                        onClick={drinkCoffee}
-                        whileTap={{ scale: 0.9 }}
-                        className="relative group"
-                      >
-                         <div className="w-12 h-14 bg-slate-800 rounded-lg border-2 border-slate-600 flex items-end justify-center overflow-hidden relative">
-                            {/* Coffee Liquid */}
-                            <motion.div 
-                              initial={false}
-                              animate={{ height: `${coffeeLevel}%` }}
-                              className="w-full bg-[#3c2f2f] absolute bottom-0 left-0"
-                            />
-                            {/* Steam */}
-                            {coffeeLevel > 80 && (
-                              <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/20 blur-md rounded-full animate-ping" />
-                            )}
-                            <span className="relative z-10 text-[8px] font-bold text-white/50 mb-2">MUG</span>
-                         </div>
-                         <div className="absolute top-2 -right-3 w-4 h-8 border-2 border-l-0 border-slate-600 rounded-r-lg" />
-                         
-                         {/* Status Tooltip */}
-                         <div className="absolute right-full mr-2 top-0 bg-black/80 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity">
-                           {coffeeLevel === 0 ? "PUSTY! (-50% CPS)" : `Poziom Kawy: ${Math.floor(coffeeLevel)}%`}
-                         </div>
-                      </motion.button>
-                    </div>
+                    {unlockedResearch.includes('caffeine_research') && (
+                        <div className="absolute top-6 right-6 z-20">
+                        <motion.button
+                            onClick={drinkCoffee}
+                            whileTap={{ scale: 0.9 }}
+                            className="relative group"
+                        >
+                            <div className="w-12 h-14 bg-slate-800 rounded-lg border-2 border-slate-600 flex items-end justify-center overflow-hidden relative">
+                                {/* Coffee Liquid */}
+                                <motion.div
+                                initial={false}
+                                animate={{ height: `${coffeeLevel}%` }}
+                                className="w-full bg-[#3c2f2f] absolute bottom-0 left-0"
+                                />
+                                {/* Steam */}
+                                {coffeeLevel > 80 && (
+                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/20 blur-md rounded-full animate-ping" />
+                                )}
+                                <span className="relative z-10 text-[8px] font-bold text-white/50 mb-2">MUG</span>
+                            </div>
+                            <div className="absolute top-2 -right-3 w-4 h-8 border-2 border-l-0 border-slate-600 rounded-r-lg" />
+
+                            {/* Status Tooltip */}
+                            <div className="absolute right-full mr-2 top-0 bg-black/80 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity">
+                            {coffeeLevel === 0 ? "PUSTY! (-50% CPS)" : `Poziom Kawy: ${Math.floor(coffeeLevel)}%`}
+                            </div>
+                        </motion.button>
+                        </div>
+                    )}
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar">
                        {/* Render Upgrades as Visual Objects */}
@@ -1161,6 +1237,150 @@ export default function App() {
                )}
             </AnimatePresence>
 
+            {/* LAB TAB (NEW) */}
+            {activeTab === 'lab' && (
+              <motion.div
+                key="lab"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="max-w-6xl mx-auto"
+              >
+                 <div className="mb-8 p-6 bg-purple-900/20 border border-purple-500/30 rounded-3xl flex items-center gap-6 shadow-lg">
+                     <div className="p-4 bg-purple-500/20 rounded-2xl">
+                         <FlaskConical className="text-purple-400 w-12 h-12" />
+                     </div>
+                     <div>
+                        <h2 className="text-2xl font-bold text-white mb-2">Laboratorium Metodyczne</h2>
+                        <p className="text-purple-200/70 max-w-2xl">Ośrodek badawczo-rozwojowy absurdu. Tutaj odblokujesz nowe mechaniki i ulepszysz posiadane przedmioty.</p>
+                     </div>
+                 </div>
+
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* LEFT: RESEARCH */}
+                    <div className="space-y-6">
+                        <h3 className="text-xl font-bold text-purple-300 flex items-center gap-2"><FileText size={20}/> Projekty Badawcze</h3>
+                        <div className="grid grid-cols-1 gap-4">
+                           {RESEARCH_DATA.map(res => {
+                              // Check Requirements
+                              if (res.req && !unlockedResearch.includes(res.req)) return null;
+
+                              const isUnlocked = unlockedResearch.includes(res.id);
+
+                              return (
+                                <button
+                                  key={res.id}
+                                  onClick={() => buyResearch(res.id)}
+                                  disabled={isUnlocked || points < res.cost}
+                                  className={`p-4 rounded-xl border flex items-center gap-4 text-left transition-all relative overflow-hidden group
+                                    ${isUnlocked
+                                      ? 'bg-green-900/10 border-green-500/30 opacity-70'
+                                      : (points >= res.cost ? 'bg-purple-900/10 border-purple-500/30 hover:bg-purple-900/20' : 'bg-black/20 border-white/5 opacity-50')}
+                                  `}
+                                >
+                                   <div className={`p-3 rounded-lg ${isUnlocked ? 'bg-green-500/20' : 'bg-purple-500/20'}`}>
+                                      <res.icon className={isUnlocked ? 'text-green-400' : 'text-purple-400'} size={24} />
+                                   </div>
+                                   <div className="flex-1">
+                                      <h4 className="font-bold text-white text-lg flex items-center gap-2">
+                                        {res.name}
+                                        {isUnlocked && <Check size={16} className="text-green-500" />}
+                                      </h4>
+                                      <p className="text-sm text-slate-400">{res.desc}</p>
+                                   </div>
+                                   {!isUnlocked && (
+                                     <div className="font-mono font-bold text-right">
+                                        <div className={points >= res.cost ? 'text-white' : 'text-red-400'}>{res.cost.toLocaleString()}</div>
+                                        <div className="text-[10px] text-slate-500 uppercase">Koszt</div>
+                                     </div>
+                                   )}
+                                </button>
+                              );
+                           })}
+                        </div>
+                    </div>
+
+                    {/* RIGHT: EVOLUTIONS */}
+                    <div className="space-y-6">
+                        <h3 className="text-xl font-bold text-blue-300 flex items-center gap-2"><CircuitBoard size={20}/> Ewolucja Ekwipunku</h3>
+                        <div className="space-y-4">
+                            {Object.keys(ITEM_EVOLUTIONS).map(itemId => {
+                                const currentTier = itemEvolutions[itemId] || 0;
+                                const nextTier = ITEM_EVOLUTIONS[itemId][currentTier + 1];
+                                const currentData = ITEM_EVOLUTIONS[itemId][currentTier];
+
+                                // Visibility Check: Player must own the base item (level > 0)
+                                const baseUpgrade = upgrades.find(u => u.id === itemId);
+                                if (!baseUpgrade || baseUpgrade.level === 0) return null;
+
+                                if (!nextTier) {
+                                    return (
+                                        <div key={itemId} className="p-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between opacity-50">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded bg-slate-800 flex items-center justify-center">
+                                                    <img src={`https://placehold.co/100x100/1e293b/${currentData.imgColor}?text=MAX`} className="w-8 h-8 object-contain" alt="Max" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-white">{currentData.name}</h4>
+                                                    <span className="text-xs text-green-400">MAKSYMALNY POZIOM</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                const canAfford = points >= nextTier.cost;
+
+                                return (
+                                    <button
+                                        key={itemId}
+                                        onClick={() => evolveItem(itemId)}
+                                        disabled={!canAfford}
+                                        className={`w-full p-4 border rounded-xl flex items-center gap-4 text-left transition-all
+                                            ${canAfford ? 'bg-blue-900/10 border-blue-500/30 hover:bg-blue-900/20' : 'bg-black/20 border-white/5 opacity-50'}
+                                        `}
+                                    >
+                                         <div className="relative">
+                                            <div className="w-16 h-16 bg-slate-800 rounded-lg overflow-hidden border border-white/10">
+                                                <img src={`https://placehold.co/100x100/1e293b/${nextTier.imgColor}?text=EVO`} className="w-full h-full object-cover" alt="Evo" />
+                                            </div>
+                                            <div className="absolute -top-2 -right-2 bg-blue-600 text-[10px] font-bold px-2 py-0.5 rounded-full text-white">TIER {nextTier.tier}</div>
+                                         </div>
+
+                                         <div className="flex-1">
+                                             <div className="flex items-center gap-2 mb-1">
+                                                 <span className="text-slate-400 text-sm">{currentData.name}</span>
+                                                 <span className="text-slate-600">→</span>
+                                                 <span className="font-bold text-white">{nextTier.name}</span>
+                                             </div>
+                                             <p className="text-xs text-slate-400 mb-2">{nextTier.desc}</p>
+                                             <div className="inline-block bg-blue-500/20 text-blue-300 text-[10px] font-mono px-2 py-1 rounded">
+                                                 Mnożnik: x{nextTier.multiplier}
+                                             </div>
+                                         </div>
+
+                                         <div className="text-right">
+                                             <div className={`font-mono font-bold ${canAfford ? 'text-white' : 'text-red-400'}`}>{nextTier.cost.toLocaleString()}</div>
+                                         </div>
+                                    </button>
+                                );
+                            })}
+
+                            {/* Empty State Message if no items owned */}
+                            {Object.keys(ITEM_EVOLUTIONS).every(itemId => {
+                                const baseUpgrade = upgrades.find(u => u.id === itemId);
+                                return !baseUpgrade || baseUpgrade.level === 0;
+                            }) && (
+                                <div className="p-8 text-center text-slate-500 italic border border-dashed border-white/10 rounded-xl">
+                                    Kup podstawowe przedmioty (Kreda, Gąbka, Kartkówka) w sklepie, aby odblokować ewolucje.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                 </div>
+              </motion.div>
+            )}
+
             {/* SHOP TAB */}
             {activeTab === 'shop' && (
               <motion.div 
@@ -1174,7 +1394,6 @@ export default function App() {
                   <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                     {[
                       { id: 'education', label: 'Edukacja', icon: <GraduationCap size={18} /> },
-                      { id: 'lab', label: 'Laboratorium', icon: <FlaskConical size={18} /> },
                       { id: 'style', label: 'Styl', icon: <Palette size={18} /> },
                       { id: 'audio', label: 'Fonoteka', icon: <Music size={18} /> }
                     ].map(tab => (
@@ -1209,13 +1428,18 @@ export default function App() {
                       const isLocked = (tier === 2 && hardware.keyboard < 2) || (tier === 3 && hardware.keyboard < 3);
 
                       if (isLocked) {
+                         // Check for missing Certyfikat (for Tier 2 and above visual hint)
+                         const missingCert = tier === 2 && !unlockedResearch.includes('it_certificate');
+
                          return (
                            <div key={tier} className="opacity-50 grayscale select-none filter blur-sm relative overflow-hidden rounded-2xl border border-white/5 bg-black/20 p-8 text-center">
                               <div className="absolute inset-0 flex items-center justify-center z-10">
                                  <div className="bg-black/80 p-4 rounded-xl border border-white/20 backdrop-blur-md">
                                     <Lock className="mx-auto mb-2 text-red-500" />
                                     <h3 className="text-xl font-bold text-white mb-1">TIER {tier} ZABLOKOWANY</h3>
-                                    <p className="text-sm text-slate-400">Wymagana lepsza klawiatura w Serwerowni.</p>
+                                    <p className="text-sm text-slate-400">
+                                        {missingCert ? "Wymagany Certyfikat Informatyka z Laboratorium." : "Wymagana lepsza klawiatura w Serwerowni."}
+                                    </p>
                                  </div>
                               </div>
                               <h3 className="text-xl font-bold text-slate-600 mb-4 flex items-center gap-3 justify-center">
@@ -1278,67 +1502,6 @@ export default function App() {
                       );
                     })}
                   </div>
-                )}
-
-                {/* LABORATORIUM (ITEM EVOLUTIONS) */}
-                {activeShopTab === 'lab' && (
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="col-span-full mb-4 p-4 bg-purple-900/20 border border-purple-500/30 rounded-xl flex items-center gap-4">
-                         <FlaskConical className="text-purple-400" size={32} />
-                         <div>
-                            <h3 className="font-bold text-purple-300">Laboratorium Metodyczne</h3>
-                            <p className="text-sm text-purple-200/70">Tutaj możesz ulepszać JAKOŚĆ swoich przedmiotów. Ewolucja zmienia wygląd i drastycznie zwiększa moc.</p>
-                         </div>
-                      </div>
-
-                      {Object.keys(ITEM_EVOLUTIONS).map(itemId => {
-                         const currentTier = itemEvolutions[itemId] || 0;
-                         const nextTier = ITEM_EVOLUTIONS[itemId][currentTier + 1];
-                         const currentData = ITEM_EVOLUTIONS[itemId][currentTier];
-
-                         if (!nextTier) {
-                            return (
-                               <div key={itemId} className="p-6 bg-green-900/20 border border-green-500/30 rounded-xl flex flex-col items-center text-center">
-                                  <Check className="text-green-500 mb-2" size={32} />
-                                  <h3 className="font-bold text-white text-xl">{currentData.name} (MAX)</h3>
-                                  <p className="text-green-400">Osiągnięto szczyt ewolucji.</p>
-                               </div>
-                            );
-                         }
-
-                         const canAfford = points >= nextTier.cost;
-
-                         return (
-                            <button
-                               key={itemId}
-                               onClick={() => evolveItem(itemId)}
-                               disabled={!canAfford}
-                               className={`p-6 border rounded-xl flex flex-col text-left transition-all
-                                  ${canAfford ? 'bg-white/5 border-purple-500/50 hover:bg-white/10' : 'bg-black/20 border-white/5 opacity-60'}
-                               `}
-                            >
-                               <div className="flex justify-between items-start w-full mb-4">
-                                  <div className="flex gap-4">
-                                     <div className="w-16 h-16 bg-slate-800 rounded-lg overflow-hidden border border-white/10">
-                                        <img src={`https://placehold.co/100x100/1e293b/${nextTier.imgColor}?text=Evo`} alt="Evo" className="w-full h-full object-cover" />
-                                     </div>
-                                     <div>
-                                        <div className="text-xs text-slate-500 uppercase">Ewolucja Przedmiotu</div>
-                                        <h3 className="font-bold text-white text-lg">{currentData.name} <span className="text-slate-500">→</span> <span className="text-purple-400">{nextTier.name}</span></h3>
-                                     </div>
-                                  </div>
-                               </div>
-                               <p className="text-slate-300 mb-4 text-sm">{nextTier.desc}</p>
-                               <div className="mt-auto w-full flex justify-between items-center border-t border-white/10 pt-4">
-                                  <div className="text-purple-400 font-mono text-xs">Mnożnik Mocy: x{nextTier.multiplier}</div>
-                                  <div className={`font-bold font-mono ${canAfford ? 'text-white' : 'text-red-400'}`}>
-                                     {nextTier.cost.toLocaleString()} pkt
-                                  </div>
-                               </div>
-                            </button>
-                         );
-                      })}
-                   </div>
                 )}
 
                 {/* STYLE SHOP */}
@@ -1466,37 +1629,46 @@ export default function App() {
                    </div>
 
                    {/* Overclock Button */}
-                   <div className="ml-auto pl-8 border-l border-white/10 z-10">
-                      <button
-                         onClick={activateOverclock}
-                         disabled={overclockTime > 0}
-                         className={`w-40 h-40 rounded-full border-8 font-bold flex flex-col items-center justify-center transition-all
-                            ${overclockTime > 0 
-                              ? 'border-yellow-500 bg-yellow-500/20 text-yellow-500 animate-pulse cursor-not-allowed' 
-                              : 'border-red-600 bg-red-900/20 text-red-500 hover:bg-red-900/40 hover:scale-105 shadow-[0_0_30px_rgba(220,38,38,0.4)]'}
-                         `}
-                      >
-                         <Zap size={32} className="mb-2" />
-                         {overclockTime > 0 ? (
-                           <>
-                             <span className="text-2xl">{overclockTime}s</span>
-                             <span className="text-xs">PODKRĘCONO</span>
-                           </>
-                         ) : (
-                           <>
-                             <span className="text-lg text-center leading-tight">PODKRĘĆ<br/>SPRZĘT</span>
-                             <span className="text-[10px] mt-1 opacity-70">Ryzyko awarii 30%</span>
-                           </>
-                         )}
-                      </button>
-                   </div>
+                   {unlockedResearch.includes('overclock_license') && (
+                        <div className="ml-auto pl-8 border-l border-white/10 z-10">
+                            <button
+                                onClick={activateOverclock}
+                                disabled={overclockTime > 0}
+                                className={`w-40 h-40 rounded-full border-8 font-bold flex flex-col items-center justify-center transition-all
+                                    ${overclockTime > 0
+                                    ? 'border-yellow-500 bg-yellow-500/20 text-yellow-500 animate-pulse cursor-not-allowed'
+                                    : 'border-red-600 bg-red-900/20 text-red-500 hover:bg-red-900/40 hover:scale-105 shadow-[0_0_30px_rgba(220,38,38,0.4)]'}
+                                `}
+                            >
+                                <Zap size={32} className="mb-2" />
+                                {overclockTime > 0 ? (
+                                <>
+                                    <span className="text-2xl">{overclockTime}s</span>
+                                    <span className="text-xs">PODKRĘCONO</span>
+                                </>
+                                ) : (
+                                <>
+                                    <span className="text-lg text-center leading-tight">PODKRĘĆ<br/>SPRZĘT</span>
+                                    <span className="text-[10px] mt-1 opacity-70">Ryzyko awarii 30%</span>
+                                </>
+                                )}
+                            </button>
+                        </div>
+                   )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                    {/* MICE */}
                    <div className="space-y-4">
                       <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><MousePointer2 size={14}/> Myszki</h3>
-                      {HARDWARE_DATA.mouse.map((item, idx) => (
+                      {HARDWARE_DATA.mouse.map((item, idx) => {
+                         const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
+                         if (isLocked) return (
+                             <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
+                                 <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane (Certyfikat)</span>
+                             </div>
+                         );
+                         return (
                          <button
                            key={item.id}
                            onClick={() => buyHardware('mouse', idx + 1)}
@@ -1511,13 +1683,20 @@ export default function App() {
                             <div className="text-[10px] font-mono text-[var(--theme-primary)] mb-1">+{item.effect} click</div>
                             {hardware.mouse < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
                          </button>
-                      ))}
+                      )})}
                    </div>
 
                    {/* MONITORS */}
                    <div className="space-y-4">
                       <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><Monitor size={14}/> Monitory</h3>
-                      {HARDWARE_DATA.monitor.map((item, idx) => (
+                      {HARDWARE_DATA.monitor.map((item, idx) => {
+                         const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
+                         if (isLocked) return (
+                             <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
+                                 <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane (Certyfikat)</span>
+                             </div>
+                         );
+                         return (
                          <button
                            key={item.id}
                            onClick={() => buyHardware('monitor', idx + 1)}
@@ -1532,13 +1711,20 @@ export default function App() {
                             <div className="text-[10px] font-mono text-[var(--theme-primary)] mb-1">Mnożnik x{item.multiplier}</div>
                             {hardware.monitor < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
                          </button>
-                      ))}
+                      )})}
                    </div>
 
                    {/* KEYBOARDS */}
                    <div className="space-y-4">
                       <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><Keyboard size={14}/> Klawiatury</h3>
-                      {HARDWARE_DATA.keyboard.map((item, idx) => (
+                      {HARDWARE_DATA.keyboard.map((item, idx) => {
+                         const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
+                         if (isLocked) return (
+                             <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
+                                 <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane (Certyfikat)</span>
+                             </div>
+                         );
+                         return (
                          <button
                            key={item.id}
                            onClick={() => buyHardware('keyboard', idx + 1)}
@@ -1553,13 +1739,126 @@ export default function App() {
                             <div className="text-[10px] font-mono text-yellow-500 mb-1">Odblokowuje Tier {item.unlockTier}</div>
                             {hardware.keyboard < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
                          </button>
-                      ))}
+                      )})}
+                   </div>
+
+                   {/* RAM (NEW) */}
+                   <div className="space-y-4">
+                      <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><StickyNote size={14}/> RAM</h3>
+                      {HARDWARE_DATA.ram.map((item, idx) => {
+                         // Check lock for higher tiers (optional, but requested locking logic for Tier 2)
+                         // Assuming RAM tiers correspond roughly to game tiers or just availability.
+                         // But the prompt specifically said "Unlocks Tier 2 Hardware" via research.
+                         // Let's lock items > index 0 if IT Cert is missing, to mimic Tier 2 lock?
+                         // The prompt said "Unlocks Tier 2 Hardware in Server Room".
+                         // "Tier 2 Hardware" usually means the 2nd item in the list if mapped 1:1 with Shop Tiers?
+                         // Or it means the hardware categories themselves?
+                         // "Expand the Hardware Shop with 3 new components... Unlocks Tier 2 Hardware in Server Room"
+                         // Existing code has Tier 1, 2, 3 items in each category.
+                         // So I should lock index >= 1 (Tier 2 and 3) if no certificate.
+
+                         const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
+
+                         if (isLocked) {
+                             return (
+                                 <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
+                                     <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane</span>
+                                 </div>
+                             );
+                         }
+
+                         return (
+                            <button
+                                key={item.id}
+                                onClick={() => buyHardware('ram', idx + 1)}
+                                disabled={hardware.ram >= idx + 1 || points < item.cost}
+                                className={`w-full p-3 rounded-lg border text-left transition-all relative overflow-hidden
+                                    ${hardware.ram >= idx + 1
+                                    ? 'bg-purple-500/10 border-purple-500 opacity-50'
+                                    : (points >= item.cost ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/20 border-white/5 opacity-50')}
+                                `}
+                            >
+                                <h4 className="font-bold text-white text-xs mb-1">{item.name}</h4>
+                                <div className="text-[10px] font-mono text-purple-400 mb-1">{item.desc}</div>
+                                {hardware.ram < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
+                            </button>
+                         );
+                      })}
+                   </div>
+
+                   {/* COOLING (NEW) */}
+                   <div className="space-y-4">
+                      <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><Fan size={14}/> Chłodzenie</h3>
+                      {HARDWARE_DATA.cooling.map((item, idx) => {
+                         const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
+                         if (isLocked) {
+                             return (
+                                 <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
+                                     <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane</span>
+                                 </div>
+                             );
+                         }
+                         return (
+                            <button
+                                key={item.id}
+                                onClick={() => buyHardware('cooling', idx + 1)}
+                                disabled={hardware.cooling >= idx + 1 || points < item.cost}
+                                className={`w-full p-3 rounded-lg border text-left transition-all relative overflow-hidden
+                                    ${hardware.cooling >= idx + 1
+                                    ? 'bg-cyan-500/10 border-cyan-500 opacity-50'
+                                    : (points >= item.cost ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/20 border-white/5 opacity-50')}
+                                `}
+                            >
+                                <h4 className="font-bold text-white text-xs mb-1">{item.name}</h4>
+                                <div className="text-[10px] font-mono text-cyan-400 mb-1">{item.desc}</div>
+                                {hardware.cooling < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
+                            </button>
+                         );
+                      })}
+                   </div>
+
+                   {/* POWER (NEW) */}
+                   <div className="space-y-4">
+                      <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><Plug size={14}/> Zasilanie</h3>
+                      {HARDWARE_DATA.power.map((item, idx) => {
+                         const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
+                         if (isLocked) {
+                             return (
+                                 <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
+                                     <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane</span>
+                                 </div>
+                             );
+                         }
+                         return (
+                            <button
+                                key={item.id}
+                                onClick={() => buyHardware('power', idx + 1)}
+                                disabled={hardware.power >= idx + 1 || points < item.cost}
+                                className={`w-full p-3 rounded-lg border text-left transition-all relative overflow-hidden
+                                    ${hardware.power >= idx + 1
+                                    ? 'bg-yellow-500/10 border-yellow-500 opacity-50'
+                                    : (points >= item.cost ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/20 border-white/5 opacity-50')}
+                                `}
+                            >
+                                <h4 className="font-bold text-white text-xs mb-1">{item.name}</h4>
+                                <div className="text-[10px] font-mono text-yellow-400 mb-1">{item.desc}</div>
+                                {hardware.power < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
+                            </button>
+                         );
+                      })}
                    </div>
 
                    {/* GPU */}
                    <div className="space-y-4">
                       <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><CircuitBoard size={14}/> Karty Graficzne</h3>
-                      {HARDWARE_DATA.gpu.map((item, idx) => (
+                      {HARDWARE_DATA.gpu.map((item, idx) => {
+                         const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
+                         if (isLocked) return (
+                             <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
+                                 <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane (Certyfikat)</span>
+                             </div>
+                         );
+                         return (
                          <button
                            key={item.id}
                            onClick={() => buyHardware('gpu', idx + 1)}
@@ -1574,13 +1873,20 @@ export default function App() {
                             <div className="text-[10px] font-mono text-green-400 mb-1">Szansa Kryt: {Math.round(item.chance * 100)}%</div>
                             {hardware.gpu < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
                          </button>
-                      ))}
+                      )})}
                    </div>
 
                    {/* CPU */}
                    <div className="space-y-4">
                       <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><Cpu size={14}/> Procesory</h3>
-                      {HARDWARE_DATA.cpu.map((item, idx) => (
+                      {HARDWARE_DATA.cpu.map((item, idx) => {
+                         const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
+                         if (isLocked) return (
+                             <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
+                                 <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane (Certyfikat)</span>
+                             </div>
+                         );
+                         return (
                          <button
                            key={item.id}
                            onClick={() => buyHardware('cpu', idx + 1)}
@@ -1595,7 +1901,7 @@ export default function App() {
                             <div className="text-[10px] font-mono text-blue-400 mb-1">Moc Kryt: +{item.multiplier}x</div>
                             {hardware.cpu < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
                          </button>
-                      ))}
+                      )})}
                    </div>
 
                 </div>
@@ -1873,6 +2179,15 @@ export default function App() {
         >
           <ShoppingBag size={28} />
           <span className="sr-only">Sklep</span>
+        </button>
+        <button
+          onClick={() => { setActiveTab('lab'); setHasNewLabItem(false); }}
+          className={`p-3 rounded-xl transition-all relative ${activeTab === 'lab' ? 'bg-white/10' : 'text-slate-500 hover:text-slate-300'}`}
+          style={activeTab === 'lab' ? { color: 'var(--theme-primary)' } : {}}
+        >
+          <FlaskConical size={28} />
+          {hasNewLabItem && <span className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full animate-pulse border-2 border-black" />}
+          <span className="sr-only">Laboratorium</span>
         </button>
         <button 
           onClick={() => setActiveTab('hardware')}
