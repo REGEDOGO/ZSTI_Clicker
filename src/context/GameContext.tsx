@@ -41,6 +41,7 @@ export interface GameState {
     ram: number;
     cooling: number;
     power: number;
+    case: number;
   };
   itemEvolutions: {
     chalk: number;
@@ -48,6 +49,7 @@ export interface GameState {
     quiz: number;
   };
   unlockedResearch: string[];
+  isCoffeeUnlocked: boolean; // Explicit coffee unlock state
   unlockedAchievements: string[];
 
   ownedThemes: string[];
@@ -117,7 +119,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     cpu: 0,
     ram: 0,
     cooling: 0,
-    power: 0
+    power: 0,
+    case: 0
   });
 
   const [itemEvolutions, setItemEvolutions] = useState<GameState['itemEvolutions']>({
@@ -133,6 +136,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [coffeeLevel, setCoffeeLevel] = useState(100);
   const [coffeeBuffEndTime, setCoffeeBuffEndTime] = useState(0);
   const [totalCoffees, setTotalCoffees] = useState(0);
+
+  // Derived state for coffee unlock to ensure it updates immediately
+  const isCoffeeUnlocked = unlockedResearch.includes('caffeine_research');
 
   // Progression
   const [totalClicks, setTotalClicks] = useState(0);
@@ -277,7 +283,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           coffeeMult = 2.0;
       }
       globalMultiplier *= coffeeMult;
-    } else if (coffeeLevel <= 0 && unlockedResearch.includes('caffeine_research')) {
+    } else if (coffeeLevel <= 0 && isCoffeeUnlocked) {
       globalMultiplier *= 0.5;
     }
 
@@ -289,7 +295,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setClickPower(Math.floor(baseClick * globalMultiplier));
     setAutoPoints(Math.floor(baseAuto * globalMultiplier));
 
-  }, [upgrades, hardware, prestigeLevel, overclockTime, isCrashed, itemEvolutions, coffeeLevel, coffeeBuffEndTime, unlockedResearch]);
+  }, [upgrades, hardware, prestigeLevel, overclockTime, isCrashed, itemEvolutions, coffeeLevel, coffeeBuffEndTime, unlockedResearch, isCoffeeUnlocked]);
 
   // --- THEME ---
   useEffect(() => {
@@ -341,7 +347,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Coffee Drain
-      if (unlockedResearch.includes('caffeine_research')) {
+      if (isCoffeeUnlocked) {
           setCoffeeLevel(prev => Math.max(0, prev - 1.6));
       }
 
@@ -352,7 +358,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [autoPoints, overclockTime, isCrashed, hardware.ram, unlockedResearch]);
+  }, [autoPoints, overclockTime, isCrashed, hardware.ram, isCoffeeUnlocked]);
 
   // Quotes
   useEffect(() => {
@@ -601,7 +607,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setTotalEarnings(0);
       setTotalClicks(0);
       setUpgrades(SHOP_ITEMS.map(u => ({ ...u, level: 0, currentCost: u.baseCost })));
-      setHardware({ mouse: 0, monitor: 0, keyboard: 0, gpu: 0, cpu: 0, ram: 0, cooling: 0, power: 0 });
+      setHardware({ mouse: 0, monitor: 0, keyboard: 0, gpu: 0, cpu: 0, ram: 0, cooling: 0, power: 0, case: 0 });
       setItemEvolutions({ chalk: 0, sponge: 0, quiz: 0 });
       setCoffeeLevel(100);
       alert(`Gratulacje Panie Ministrze! Twój obecny bonus: +${newPrestige * 10}%`);
@@ -636,7 +642,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value: GameState = {
     points, autoPoints, clickPower, totalClicks, totalEarnings, totalPlayTime, prestigeLevel,
-    upgrades, hardware, itemEvolutions, unlockedResearch, unlockedAchievements,
+    upgrades, hardware, itemEvolutions, unlockedResearch, isCoffeeUnlocked, unlockedAchievements,
     ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume,
     coffeeLevel, overclockTime, isCrashed, crashTime,
     activeQuote, newsIndex, currentIQ, inspekcjaVisible, panicMode, clicks, hasNewLabItem,

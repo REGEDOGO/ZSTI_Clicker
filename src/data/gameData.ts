@@ -376,6 +376,11 @@ export const HARDWARE_ITEMS: Record<string, HardwareItem[]> = {
     { id: 'psu_1', name: "Chomik w Kołowrotku", desc: "Mnożnik 2.2x", multiplier: 2.2, cost: 2000 },
     { id: 'psu_2', name: "Kabel od Sąsiada", desc: "Mnożnik 3.0x", multiplier: 3.0, cost: 25000 },
     { id: 'psu_3', name: "Mini-Reaktor Czarnobylski", desc: "Mnożnik 5.0x", multiplier: 5.0, cost: 500000 },
+  ],
+  case: [
+    { id: 'case_1', name: "Karton po mleku", desc: "Dobra wentylacja, słaba ognioodporność.", cost: 500 },
+    { id: 'case_2', name: "Stara Obudowa ATX", desc: "Beżowa, brzydka, niezniszczalna.", cost: 2500 },
+    { id: 'case_3', name: "Szklana Pułapka RGB", desc: "Widać kurz, ale świeci na tęczowo.", cost: 15000 },
   ]
 };
 
