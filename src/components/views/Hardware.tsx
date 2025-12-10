@@ -11,7 +11,8 @@ import {
   StickyNote,
   Fan,
   Plug,
-  Lock
+  Lock,
+  Box
 } from 'lucide-react';
 
 export const Hardware: React.FC = () => {
@@ -34,7 +35,7 @@ export const Hardware: React.FC = () => {
             <div className="flex flex-col items-center z-10">
                 <div className="w-32 h-24 bg-slate-800 rounded-lg border-4 border-slate-600 flex items-center justify-center mb-2 relative overflow-hidden">
                 {hardware.monitor === 0 && <span className="text-xs text-slate-500">Brak Monitora</span>}
-                {hardware.monitor === 1 && <div className="w-20 h-16 bg-gray-400 rounded-full opacity-50 animate-pulse">CRT</div>}
+                {hardware.monitor === 1 && <div className="w-20 h-16 bg-gray-400 rounded-full opacity-50 animate-pulse">CRT 14 cali</div>}
                 {hardware.monitor === 2 && <div className="w-28 h-20 bg-blue-900/50 flex items-center justify-center text-xs">LCD <div className="w-1 h-1 bg-red-500 absolute top-4 left-8" /></div>}
                 {hardware.monitor === 3 && <div className="absolute inset-0 bg-[url('https://placehold.co/128x96/000/fff?text=WALL')] opacity-50" />}
                 </div>
@@ -59,6 +60,17 @@ export const Hardware: React.FC = () => {
                 {hardware.mouse === 3 && <div className="w-full h-full bg-gradient-to-t from-red-500 via-green-500 to-blue-500 opacity-20 animate-pulse" />}
                 </div>
                 <span className="text-xs text-slate-400 uppercase tracking-wider">Mysz (Tier {hardware.mouse})</span>
+            </div>
+
+             {/* Case (Obudowa) */}
+             <div className="flex flex-col items-center z-10">
+                <div className="w-24 h-32 bg-slate-800 rounded-lg border-4 border-slate-600 flex items-center justify-center mb-2 relative overflow-hidden">
+                    {hardware.case === 0 && <span className="text-[10px] text-slate-500 text-center">Brak<br/>Obudowy</span>}
+                    {hardware.case === 1 && <div className="w-16 h-24 bg-amber-200/20 border-2 border-amber-200/40 rotate-1 flex items-center justify-center text-[8px] text-amber-200">MLEKO</div>}
+                    {hardware.case === 2 && <div className="w-20 h-28 bg-[#d4d4d0] border-2 border-gray-400 flex flex-col items-end p-1"><div className="w-2 h-2 bg-black/50 mb-1"/><div className="w-full h-px bg-black/20"/></div>}
+                    {hardware.case === 3 && <div className="w-20 h-28 bg-black/80 border-2 border-purple-500 animate-pulse shadow-[0_0_15px_rgba(168,85,247,0.5)] flex items-center justify-center"><div className="w-16 h-20 border border-white/10 flex flex-wrap gap-1 p-1"><div className="w-full h-2 bg-red-500/50"/><div className="w-full h-2 bg-green-500/50"/><div className="w-full h-2 bg-blue-500/50"/></div></div>}
+                </div>
+                <span className="text-xs text-slate-400 uppercase tracking-wider">Obudowa (Tier {hardware.case})</span>
             </div>
 
             {/* GPU/CPU Vis */}
@@ -187,6 +199,35 @@ export const Hardware: React.FC = () => {
                     {hardware.keyboard < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
                     </button>
                 )})}
+            </div>
+
+            {/* CASES (Obudowy) */}
+            <div className="space-y-4">
+                <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><Box size={14}/> Obudowy</h3>
+                {HARDWARE_ITEMS.case.map((item, idx) => {
+                    const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
+                     if (isLocked) return (
+                        <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
+                            <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane (Certyfikat)</span>
+                        </div>
+                    );
+                    return (
+                    <button
+                        key={item.id}
+                        onClick={() => buyHardware('case', idx + 1)}
+                        disabled={hardware.case >= idx + 1 || points < item.cost}
+                        className={`w-full p-3 rounded-lg border text-left transition-all relative overflow-hidden
+                            ${hardware.case >= idx + 1
+                            ? 'bg-amber-500/10 border-amber-500 opacity-50'
+                            : (points >= item.cost ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/20 border-white/5 opacity-50')}
+                        `}
+                    >
+                        <h4 className="font-bold text-white text-xs mb-1">{item.name}</h4>
+                        <div className="text-[10px] font-mono text-amber-400 mb-1">{item.desc}</div>
+                        {hardware.case < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
+                    </button>
+                    );
+                })}
             </div>
 
             {/* RAM */}
