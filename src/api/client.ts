@@ -73,6 +73,20 @@ export const apiClient = {
       body: formData
     });
     return handleResponse(res);
+  },
+
+  async searchUsers(query: string) {
+    const res = await fetch(`${API_URL}/users/search?q=${encodeURIComponent(query)}`, {
+      method: 'GET'
+    });
+    return handleResponse(res);
+  },
+
+  async getUserPublicProfile(userId: number) {
+    const res = await fetch(`${API_URL}/users/${userId}/public`, {
+        method: 'GET'
+    });
+    return handleResponse(res);
   }
 };
 

@@ -283,6 +283,71 @@ app.post('/api/upload-banner', upload.single('banner'), async (req, res) => {
     }
 });
 
+// SEARCH USERS
+app.get('/api/users/search', async (req, res) => {
+    try {
+        const query = req.query.q;
+        if (!query) return res.json([]);
+
+        if (!pool) return res.status(500).json({ error: 'Database not initialized' });
+
+        const [rows] = await pool.execute(
+            'SELECT id, username, avatar_url, banner_url FROM users WHERE username LIKE ? LIMIT 20',
+            [`%${query}%`]
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Błąd serwera' });
+    }
+});
+
+// GET PUBLIC PROFILE
+app.get('/api/users/:id/public', async (req, res) => {
+    try {
+        const userId = req.params.id;
+        if (!pool) return res.status(500).json({ error: 'Database not initialized' });
+
+        const [rows] = await pool.execute(
+            'SELECT id, username, avatar_url, banner_url, save_data FROM users WHERE id = ?',
+            [userId]
+        );
+
+        if (rows.length === 0) return res.status(404).json({ error: 'Użytkownik nie znaleziony' });
+
+        const user = rows[0];
+        let saveData = {};
+        try {
+            if (user.save_data) {
+                saveData = JSON.parse(user.save_data);
+            }
+        } catch (e) {
+            console.error("Failed to parse save data for user", userId);
+        }
+
+        // Construct safe object
+        const publicProfile = {
+            id: user.id,
+            username: user.username,
+            avatar_url: user.avatar_url,
+            banner_url: user.banner_url,
+            stats: {
+                prestige: saveData.prestigeLevel || 0,
+                totalClicks: saveData.totalClicks || 0,
+                totalEarnings: saveData.totalEarnings || 0,
+                rank: saveData.currentRank || "Uczeń", // Note: currentRank might not be in saveData, usually derived on frontend
+                achievementsCount: saveData.unlockedAchievements?.length || 0
+            }
+        };
+
+        res.json(publicProfile);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Błąd serwera' });
+    }
+});
+
 // 404 Handler for API
 app.use('/api', (req, res) => {
     res.status(404).json({ error: 'API endpoint not found' });

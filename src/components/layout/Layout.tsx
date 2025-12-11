@@ -8,6 +8,7 @@ import { Shop } from '../views/Shop';
 import { Hardware } from '../views/Hardware';
 import { Lab } from '../views/Lab';
 import { Profile } from '../views/Profile';
+import { Social } from '../views/Social';
 import { Settings } from '../views/Settings';
 import { Achievements } from '../views/Achievements'; // Will create this too since it's in the tab list
 import { Odometer } from '../ui/Odometer';
@@ -207,6 +208,7 @@ export const Layout: React.FC = () => {
              {activeTab === 'shop' && <Shop key="shop" />}
              {activeTab === 'lab' && <Lab key="lab" />}
              {activeTab === 'hardware' && <Hardware key="hardware" />}
+             {activeTab === 'social' && <Social key="social" />}
              {activeTab === 'profile' && <Profile key="profile" />}
              {activeTab === 'settings' && <Settings key="settings" />}
              {activeTab === 'achievements' && <Achievements key="achievements" />}
