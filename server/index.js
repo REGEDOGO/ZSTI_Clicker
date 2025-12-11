@@ -3,6 +3,8 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,6 +12,19 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Allow large save data
+app.use('/uploads', express.static('uploads'));
+
+// Multer Storage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
 
 // Database Connection
 const dbConfig = {
@@ -121,7 +136,13 @@ app.post('/api/login', async (req, res) => {
 
         res.json({
             message: 'Zalogowano',
-            user: { id: user.id, username: user.username, email: user.email },
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                avatar_url: user.avatar_url,
+                banner_url: user.banner_url
+            },
             saveData
         });
 
@@ -171,6 +192,52 @@ app.get('/api/load/:userId', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Błąd wczytywania' });
+    }
+});
+
+// GET USER PROFILE
+app.get('/api/user/:userId', async (req, res) => {
+    const userId = req.params.userId;
+    try {
+        const [rows] = await pool.execute(
+            'SELECT id, username, email, avatar_url, banner_url FROM users WHERE id = ?',
+            [userId]
+        );
+        if (rows.length === 0) return res.status(404).json({ error: 'Nie znaleziono' });
+        res.json(rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Błąd serwera' });
+    }
+});
+
+// UPLOAD AVATAR
+app.post('/api/upload-avatar', upload.single('avatar'), async (req, res) => {
+    const userId = req.body.userId;
+    if (!req.file || !userId) return res.status(400).json({ error: 'Brak pliku lub ID' });
+
+    const fileUrl = `/uploads/${req.file.filename}`;
+    try {
+        await pool.execute('UPDATE users SET avatar_url = ? WHERE id = ?', [fileUrl, userId]);
+        res.json({ message: 'Avatar zaktualizowany', url: fileUrl });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Błąd bazy danych' });
+    }
+});
+
+// UPLOAD BANNER
+app.post('/api/upload-banner', upload.single('banner'), async (req, res) => {
+    const userId = req.body.userId;
+    if (!req.file || !userId) return res.status(400).json({ error: 'Brak pliku lub ID' });
+
+    const fileUrl = `/uploads/${req.file.filename}`;
+    try {
+        await pool.execute('UPDATE users SET banner_url = ? WHERE id = ?', [fileUrl, userId]);
+        res.json({ message: 'Baner zaktualizowany', url: fileUrl });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Błąd bazy danych' });
     }
 });
 

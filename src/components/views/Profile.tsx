@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useGame } from '../../context/GameContext';
 import { useAuth } from '../../context/AuthContext';
 import { apiClient } from '../../api/client';
 import {
     CreditCard, Activity, MousePointer2, Star, Music, Palette, Trophy, Zap, ShoppingCart,
-    Save, LogOut, User as UserIcon, Edit2, Check, X, Shield, Lock, Unlock
+    Save, LogOut, User as UserIcon, Edit2, Check, X, Shield, Lock, Unlock, Camera, Image as ImageIcon
 } from 'lucide-react';
 import { MUSIC_TRACKS, THEMES, ACHIEVEMENTS } from '../../data/gameData';
 import { motion } from 'framer-motion';
@@ -26,13 +26,17 @@ export const Profile: React.FC = () => {
     hardware,
     isGuest,
     setShowAuthModal
-  } = useGame() as any; // Using any to access new fields if TS complains
+  } = useGame() as any;
 
-  const { user, logout, login } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const [isEditingName, setIsEditingName] = useState(false);
   const [newUsername, setNewUsername] = useState(user?.username || '');
   const [nameError, setNameError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  // File Inputs
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   // Stats Calculations
   const totalMusic = MUSIC_TRACKS.length;
@@ -46,15 +50,35 @@ export const Profile: React.FC = () => {
 
       try {
           await apiClient.updateUsername(user.id, newUsername);
-          // Force reload or update context user logic (simplified: reload page or rely on AuthContext update if implemented)
-          // For now we just close edit mode and show success, ideally AuthContext should update.
-          // Since AuthContext reads from localStorage/state, we might need to manually update it or reload.
-          // Let's reload for simplicity to sync everything or just show UI change.
+          await refreshUser();
           setIsEditingName(false);
           setNameError(null);
-          alert("Nazwa zaktualizowana! (Odśwież stronę, aby zobaczyć zmiany w systemie)");
       } catch (err: any) {
           setNameError(err.message || "Błąd aktualizacji");
+      }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files?.[0] || !user?.id) return;
+      try {
+          await apiClient.uploadAvatar(user.id, e.target.files[0]);
+          await refreshUser();
+      } catch (err) {
+          alert("Błąd wysyłania awatara");
+      }
+  };
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files?.[0] || !user?.id) return;
+      if (unlockedAchievements.length < 10) {
+          alert("Odblokuj 10 osiągnięć, aby zmienić baner!");
+          return;
+      }
+      try {
+          await apiClient.uploadBanner(user.id, e.target.files[0]);
+          await refreshUser();
+      } catch (err) {
+          alert("Błąd wysyłania banera");
       }
   };
 
@@ -92,28 +116,73 @@ export const Profile: React.FC = () => {
     <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-8">
 
         {/* HEADER SECTION: IDENTITY */}
-        <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-                <UserIcon size={200} />
-            </div>
+        <div className="relative bg-slate-900 border border-slate-700 rounded-3xl overflow-hidden shadow-2xl group/banner">
 
-            {/* Avatar */}
-            <div className="relative group">
-                <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-[var(--theme-primary)] overflow-hidden shadow-[0_0_30px_rgba(16,185,129,0.3)] bg-slate-800">
-                     <img
-                        src={`https://placehold.co/400x400/1e293b/10b981?text=${(user?.username || 'GUEST').charAt(0).toUpperCase()}`}
-                        alt="Avatar"
-                        className="w-full h-full object-cover"
-                     />
-                </div>
-                <div className="absolute bottom-2 right-2 bg-slate-900 text-[var(--theme-primary)] text-xs font-bold px-2 py-1 rounded border border-slate-700">
-                    LVL {Math.floor(totalClicks / 1000)}
-                </div>
-            </div>
+            {/* Banner Background */}
+            <div
+                className="absolute inset-0 bg-cover bg-center opacity-50 transition-opacity group-hover/banner:opacity-70"
+                style={{
+                    backgroundImage: user?.banner_url ? `url(http://localhost:3000${user.banner_url})` : undefined,
+                    background: !user?.banner_url ? 'linear-gradient(to right, #0f172a, #1e293b)' : undefined
+                }}
+            />
 
-            {/* Info */}
-            <div className="flex-1 text-center md:text-left z-10">
-                <div className="flex flex-col md:flex-row items-center gap-4 mb-2 justify-center md:justify-start">
+            {/* Banner Edit Button */}
+            {!isGuest && (
+                <div className="absolute top-4 right-4 opacity-0 group-hover/banner:opacity-100 transition-opacity z-20">
+                    <button
+                        onClick={() => bannerInputRef.current?.click()}
+                        className="bg-black/50 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm"
+                        title={unlockedAchievements.length < 10 ? "Wymaga 10 osiągnięć" : "Zmień Baner"}
+                    >
+                        {unlockedAchievements.length < 10 ? <Lock size={20} /> : <ImageIcon size={20} />}
+                    </button>
+                    <input
+                        type="file"
+                        ref={bannerInputRef}
+                        onChange={handleBannerUpload}
+                        className="hidden"
+                        accept="image/*"
+                    />
+                </div>
+            )}
+
+            <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent pt-32">
+
+                {/* Avatar */}
+                <div className="relative group">
+                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-[var(--theme-primary)] overflow-hidden shadow-[0_0_30px_rgba(16,185,129,0.3)] bg-slate-800 relative">
+                        <img
+                            src={user?.avatar_url ? `http://localhost:3000${user.avatar_url}` : `https://placehold.co/400x400/1e293b/10b981?text=${(user?.username || 'G').charAt(0).toUpperCase()}`}
+                            alt="Avatar"
+                            className="w-full h-full object-cover"
+                        />
+
+                        {!isGuest && (
+                            <div
+                                onClick={() => avatarInputRef.current?.click()}
+                                className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                            >
+                                <Camera className="text-white" size={32} />
+                            </div>
+                        )}
+                    </div>
+                    <input
+                        type="file"
+                        ref={avatarInputRef}
+                        onChange={handleAvatarUpload}
+                        className="hidden"
+                        accept="image/*"
+                    />
+
+                    <div className="absolute bottom-2 right-2 bg-slate-900 text-[var(--theme-primary)] text-xs font-bold px-2 py-1 rounded border border-slate-700 z-10">
+                        LVL {Math.floor(totalClicks / 1000)}
+                    </div>
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 text-center md:text-left">
+                    <div className="flex flex-col md:flex-row items-center gap-4 mb-2 justify-center md:justify-start">
                     {isEditingName ? (
                         <div className="flex items-center gap-2">
                             <input
@@ -154,6 +223,7 @@ export const Profile: React.FC = () => {
                     <span>ID: #{user?.id || 'GUEST'}</span>
                 </div>
             </div>
+        </div>
         </div>
 
         {/* STATS FOLDER "TECZKA STATYSTYK" */}
