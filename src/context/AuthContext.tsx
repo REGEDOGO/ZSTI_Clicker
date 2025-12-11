@@ -9,7 +9,6 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   login: (username: string, password: string) => Promise<any>;
   register: (username: string, email: string, password: string) => Promise<any>;
   logout: () => void;
@@ -20,13 +19,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('auth_token'));
 
   useEffect(() => {
-    // If we have a token but no user, we might want to validate it or just assume logged in for now.
-    // Ideally we'd have a /me endpoint, but for simplicity we rely on the login response setting the user.
-    // If page reload happens, we might lose user object if not persisted.
-    // Let's persist user in localStorage too for this simple app.
     const savedUser = localStorage.getItem('auth_user');
     if (savedUser) {
         setUser(JSON.parse(savedUser));
@@ -36,9 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (username: string, password: string) => {
     try {
       const data = await apiClient.login(username, password);
-      setToken(data.token);
       setUser(data.user);
-      localStorage.setItem('auth_token', data.token);
       localStorage.setItem('auth_user', JSON.stringify(data.user));
       return data;
     } catch (e) {
@@ -49,10 +41,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (username: string, email: string, password: string) => {
     try {
       const data = await apiClient.register(username, email, password);
-      setToken(data.token);
-      setUser(data.user);
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('auth_user', JSON.stringify(data.user));
+      // Backend returns userId on register, but usually login is required after.
+      // However, if we want auto-login, we need the full user object.
+      // My API returns userId. Let's assume we can construct a basic user object or just require login.
+      // But wait, the previous logic did auto-login. The new API returns { message, userId }.
+      // So we can't fully auto-login without the username/email (which we have).
+      // Let's construct it.
+      const newUser = { id: data.userId, username, email };
+      setUser(newUser);
+      localStorage.setItem('auth_user', JSON.stringify(newUser));
       return data;
     } catch (e) {
       throw e;
@@ -61,13 +58,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
-    setToken(null);
-    localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
