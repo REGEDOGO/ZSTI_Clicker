@@ -6,7 +6,8 @@ import {
   Trophy,
   PieChart,
   FlaskConical,
-  Server
+  Server,
+  Users
 } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 
@@ -52,6 +53,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
       >
         <Server size={28} />
         <span className="sr-only">Serwerownia</span>
+      </button>
+      <button
+        onClick={() => setActiveTab('social')}
+        className={`p-3 rounded-xl transition-all ${activeTab === 'social' ? 'bg-white/10' : 'text-slate-500 hover:text-slate-300'}`}
+        style={activeTab === 'social' ? { color: 'var(--theme-primary)' } : {}}
+      >
+        <Users size={28} />
+        <span className="sr-only">Społeczność</span>
       </button>
       <button
         onClick={() => setActiveTab('profile')}
