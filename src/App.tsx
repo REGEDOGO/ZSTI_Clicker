@@ -1,12 +1,15 @@
 import React from 'react';
+import { AuthProvider } from './context/AuthContext';
 import { GameProvider } from './context/GameContext';
 import { Layout } from './components/layout/Layout';
 
 const App: React.FC = () => {
   return (
-    <GameProvider>
-      <Layout />
-    </GameProvider>
+    <AuthProvider>
+      <GameProvider>
+        <Layout />
+      </GameProvider>
+    </AuthProvider>
   );
 };
 

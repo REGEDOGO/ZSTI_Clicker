@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '../../lib/supabase';
-import { X, Mail, User } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { X, Mail, User, Lock, Key } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -10,28 +10,34 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onGuest }) => {
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const { login, register } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: window.location.origin,
-      },
-    });
-
-    if (error) {
-      setMessage(`Błąd: ${error.message}`);
-    } else {
-      setMessage('Sprawdź swoją skrzynkę mailową, aby się zalogować!');
+    try {
+        if (isLoginMode) {
+            await login(username, password);
+            onClose();
+        } else {
+            await register(username, email, password);
+            setMessage({ text: "Konto utworzone! Możesz się teraz zalogować.", type: 'success' });
+            setIsLoginMode(true);
+        }
+    } catch (err: any) {
+        setMessage({ text: err.message, type: 'error' });
+    } finally {
+        setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -51,40 +57,86 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onGuest }
                 <X size={20} />
             </button>
 
-            <h2 className="text-2xl font-bold text-white mb-2 text-center">Witaj w Nierodka Clicker</h2>
-            <p className="text-slate-400 text-center mb-8 text-sm">Zaloguj się, aby zapisać postępy w chmurze.</p>
+            <h2 className="text-2xl font-bold text-white mb-2 text-center">
+                {isLoginMode ? 'Witaj ponownie' : 'Dołącz do nas'}
+            </h2>
+            <p className="text-slate-400 text-center mb-8 text-sm">
+                {isLoginMode ? 'Zaloguj się do swojego konta' : 'Zarejestruj się, aby zapisywać postępy'}
+            </p>
 
-            {message ? (
-              <div className="bg-green-500/20 text-green-300 p-4 rounded-xl text-center mb-6 border border-green-500/50">
-                {message}
+            {message && (
+              <div className={`p-4 rounded-xl text-center mb-6 border text-sm ${message.type === 'error' ? 'bg-red-500/20 text-red-300 border-red-500/50' : 'bg-green-500/20 text-green-300 border-green-500/50'}`}>
+                {message.text}
               </div>
-            ) : (
-              <form onSubmit={handleLogin} className="space-y-4">
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs uppercase text-slate-500 mb-1">Email</label>
+                  <label className="block text-xs uppercase text-slate-500 mb-1">Nazwa Użytkownika</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                     <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="twoj@email.com"
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Username"
                       required
                       className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[var(--theme-primary)] transition-colors"
                     />
                   </div>
                 </div>
+
+                {!isLoginMode && (
+                    <div>
+                    <label className="block text-xs uppercase text-slate-500 mb-1">Email</label>
+                    <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                        <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="email@example.com"
+                        required
+                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[var(--theme-primary)] transition-colors"
+                        />
+                    </div>
+                    </div>
+                )}
+
+                <div>
+                  <label className="block text-xs uppercase text-slate-500 mb-1">Hasło</label>
+                  <div className="relative">
+                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[var(--theme-primary)] transition-colors"
+                    />
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   disabled={loading}
                   className="w-full bg-[var(--theme-primary)] text-black font-bold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
-                  {loading ? 'Wysyłanie...' : 'Zaloguj Magic Link'}
+                  {loading ? 'Przetwarzanie...' : (isLoginMode ? 'Zaloguj się' : 'Zarejestruj się')}
                 </button>
-              </form>
-            )}
+            </form>
 
-            <div className="relative my-8">
+            <div className="text-center mt-6">
+                <button
+                    onClick={() => { setIsLoginMode(!isLoginMode); setMessage(null); }}
+                    className="text-slate-400 text-sm hover:text-white underline decoration-dotted"
+                >
+                    {isLoginMode ? 'Nie masz konta? Zarejestruj się' : 'Masz już konto? Zaloguj się'}
+                </button>
+            </div>
+
+            <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-white/10"></div>
               </div>
@@ -100,9 +152,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onGuest }
               <User size={18} />
               Graj jako Gość
             </button>
-            <p className="text-[10px] text-slate-500 text-center mt-2">
-                Postępy gościa są zapisywane tylko w przeglądarce.
-            </p>
           </motion.div>
         </div>
       )}
