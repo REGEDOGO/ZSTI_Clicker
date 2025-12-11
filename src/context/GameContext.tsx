@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabase';
+import { useAuth } from './AuthContext';
+import { apiClient } from '../api/client';
 import { AuthModal } from '../components/auth/AuthModal';
 import {
   SHOP_ITEMS,
@@ -117,11 +118,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [autoPoints, setAutoPoints] = useState(0);
 
   // Auth State
-  const [user, setUser] = useState<any>(null);
+  const { user, token } = useAuth();
   const [syncStatus, setSyncStatus] = useState<'saved' | 'syncing' | 'error' | 'offline'>('offline');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
-  const lastSaveTime = useRef<number>(Date.now());
 
   // Inventory
   const [upgrades, setUpgrades] = useState(() =>
@@ -186,49 +186,33 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 1. Check Auth on Mount
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (!session?.user) {
+    if (!user) {
          // Check if guest
          if (!localStorage.getItem(SAVE_KEY)) {
              setShowAuthModal(true);
          } else {
              setIsGuest(true);
          }
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
+    } else {
         setIsGuest(false);
         setShowAuthModal(false);
-        loadFromCloud(session.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+        if (token) loadFromCloud(token);
+    }
+  }, [user, token]);
 
   // 2. Load Function (Cloud or Local)
-  const loadFromCloud = async (userId: string) => {
+  const loadFromCloud = async (authToken: string) => {
       try {
-          const { data, error } = await supabase
-            .from('game_saves')
-            .select('save_data, last_updated')
-            .eq('user_id', userId)
-            .single();
+          const data = await apiClient.loadGame(authToken);
 
-          if (data && data.save_data) {
-             const cloudData = data.save_data;
+          if (data && data.saveData) {
+             const cloudData = data.saveData;
              const localSaved = localStorage.getItem(SAVE_KEY);
 
              let useCloud = true;
              if (localSaved) {
                  const localData = JSON.parse(localSaved);
-                 // Simple conflict check: if local has significantly more playtime or earnings
+                 // Simple conflict check
                  if ((localData.totalEarnings || 0) > (cloudData.totalEarnings || 0) + 1000) {
                      if (!window.confirm("Znaleziono zapis w chmurze, ale lokalny wygląda na nowszy/lepszy. Czy na pewno chcesz wczytać chmurę?")) {
                          useCloud = false;
@@ -239,9 +223,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
              if (useCloud) {
                  applySaveData(cloudData);
                  console.log("Loaded from cloud");
-             } else {
-                 // If we chose local, force a save to cloud soon
-                 setSyncStatus('syncing');
              }
           }
       } catch (e) {
@@ -316,7 +297,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 5. Cloud Save Loop (30s Interval)
   useEffect(() => {
-    if (!user) {
+    if (!user || !token) {
         setSyncStatus('offline');
         return;
     }
@@ -325,25 +306,18 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!gameStateRef.current) return;
 
         setSyncStatus('syncing');
-        const { error } = await supabase
-            .from('game_saves')
-            .upsert({
-                user_id: user.id,
-                save_data: gameStateRef.current,
-                last_updated: new Date().toISOString()
-            });
-
-        if (error) {
+        try {
+            await apiClient.saveGame(token, gameStateRef.current);
+            setSyncStatus('saved');
+        } catch (error) {
             console.error("Cloud save failed:", error);
             setSyncStatus('error');
-        } else {
-            setSyncStatus('saved');
         }
     };
 
     const intervalId = setInterval(saveToCloud, 30000);
     return () => clearInterval(intervalId);
-  }, [user]);
+  }, [user, token]);
 
   // --- STATS CALCULATION ---
   useEffect(() => {

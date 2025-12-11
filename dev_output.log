@@ -7,3 +7,6 @@
 
   ➜  Local:   http://localhost:3000/
   ➜  Network: use --host to expose
+12:43:49 PM [vite] hmr update /src/App.tsx, /src/index.css
+12:44:18 PM [vite] hmr update /src/context/GameContext.tsx, /src/index.css
+12:45:01 PM [vite] hmr update /src/components/auth/AuthModal.tsx, /src/index.css
