@@ -13,3 +13,7 @@
 1:58:40 PM [vite] hmr update /src/index.css, /src/context/AuthContext.tsx, /src/context/GameContext.tsx
 1:59:08 PM [vite] hmr update /src/context/AuthContext.tsx, /src/index.css
 1:59:20 PM [vite] hmr update /src/context/GameContext.tsx, /src/index.css
+6:45:20 PM [vite] hmr update /src/index.css, /src/context/AuthContext.tsx, /src/context/GameContext.tsx
+6:46:58 PM [vite] hmr update /src/context/GameContext.tsx, /src/index.css
+6:47:41 PM [vite] hmr update /src/components/views/Profile.tsx, /src/index.css
+6:48:06 PM [vite] hmr update /src/components/views/Profile.tsx, /src/index.css

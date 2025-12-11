@@ -34,6 +34,28 @@ initDB();
 
 // --- ENDPOINTS ---
 
+// UPDATE USERNAME
+app.post('/api/update-username', async (req, res) => {
+    const { userId, newUsername } = req.body;
+    if (!userId || !newUsername) {
+        return res.status(400).json({ error: 'Brak danych' });
+    }
+
+    try {
+        await pool.execute(
+            'UPDATE users SET username = ? WHERE id = ?',
+            [newUsername, userId]
+        );
+        res.json({ message: 'Nazwa użytkownika zaktualizowana' });
+    } catch (err) {
+        console.error(err);
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: 'Nazwa użytkownika zajęta' });
+        }
+        res.status(500).json({ error: 'Błąd serwera' });
+    }
+});
+
 // REGISTER
 app.post('/api/register', async (req, res) => {
     const { username, email, password } = req.body;
