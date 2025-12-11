@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Monitor, User, X } from 'lucide-react';
+import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { Monitor, User, X, Zap, Diamond, Eraser } from 'lucide-react'; // Added icons
 import { useGame } from '../../context/GameContext';
 import { ITEM_EVOLUTIONS } from '../../data/gameData';
+
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  icon: React.ReactNode;
+  rotation: number;
+}
 
 export const Dashboard: React.FC = () => {
   const {
@@ -14,10 +22,58 @@ export const Dashboard: React.FC = () => {
     drinkCoffee,
     buyUpgrade,
     points,
-    unlockedResearch
+    unlockedResearch,
+    hardware
   } = useGame();
 
   const [selectedUpgrade, setSelectedUpgrade] = useState<any>(null);
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const controls = useAnimation();
+
+  const spawnParticles = (e: React.MouseEvent) => {
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    const newParticles: Particle[] = [];
+    const count = 5 + Math.floor(Math.random() * 5); // 5-10 particles
+
+    const icons = [
+        <Eraser size={16} key="chalk" />,
+        <Zap size={16} key="zap" />,
+        <div key="lemon" className="w-4 h-4 rounded-full bg-yellow-400" />
+    ];
+
+    for (let i = 0; i < count; i++) {
+        newParticles.push({
+            id: Date.now() + i + Math.random(),
+            x: e.clientX,
+            y: e.clientY,
+            icon: icons[Math.floor(Math.random() * icons.length)],
+            rotation: Math.random() * 360
+        });
+    }
+
+    setParticles(prev => [...prev, ...newParticles]);
+    setTimeout(() => {
+        setParticles(prev => prev.filter(p => !newParticles.find(np => np.id === p.id)));
+    }, 1000);
+  };
+
+  const handleVisualClick = async (e: React.MouseEvent) => {
+      spawnParticles(e);
+      handleClick(e);
+
+      // Screen shake on Crit (simulated by checking if we have GPU/CPU upgrades that give crit)
+      // Since actual crit logic is in handleClick, we'll just do a small shake always, and bigger if high chance
+      let shakeIntensity = 2;
+      if (hardware.gpu > 0) shakeIntensity = 5;
+
+      await controls.start({
+          x: [0, -shakeIntensity, shakeIntensity, -shakeIntensity, shakeIntensity, 0],
+          transition: { duration: 0.2 }
+      });
+  };
 
   const getEvolutionName = (itemId: string) => {
     if (itemEvolutions[itemId as keyof typeof itemEvolutions] && ITEM_EVOLUTIONS[itemId][itemEvolutions[itemId as keyof typeof itemEvolutions]]) {
@@ -60,8 +116,9 @@ export const Dashboard: React.FC = () => {
 
         <motion.button
             whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleClick}
+            whileTap={{ scale: 0.85 }} // More punchy
+            animate={controls}
+            onClick={handleVisualClick}
             className="group relative w-64 h-64 md:w-80 md:h-80 rounded-full border-8 shadow-[0_0_50px_-10px_rgba(0,0,0,0.5)] flex items-center justify-center overflow-hidden transition-all"
             style={{
             borderColor: 'rgba(255,255,255,0.1)',
@@ -77,6 +134,28 @@ export const Dashboard: React.FC = () => {
                 <div className="text-xs text-slate-500 mt-2 font-mono">KLIKNIJ ABY ZDAĆ</div>
             </div>
         </motion.button>
+
+        {/* Particles */}
+        <AnimatePresence>
+            {particles.map(p => (
+                <motion.div
+                    key={p.id}
+                    initial={{ x: p.x, y: p.y, opacity: 1, scale: 0.5, rotate: p.rotation }}
+                    animate={{
+                        x: p.x + (Math.random() * 200 - 100),
+                        y: p.y + (Math.random() * 200 - 100),
+                        opacity: 0,
+                        scale: 0,
+                        rotate: p.rotation + 180
+                    }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="fixed pointer-events-none text-[var(--theme-primary)] z-50"
+                >
+                    {p.icon}
+                </motion.div>
+            ))}
+        </AnimatePresence>
         </div>
 
         {/* Right: The Desk (Biurko Nauczyciela) */}

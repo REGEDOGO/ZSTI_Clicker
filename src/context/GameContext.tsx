@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { supabase } from '../lib/supabase';
+import { AuthModal } from '../components/auth/AuthModal';
 import {
   SHOP_ITEMS,
   HARDWARE_ITEMS,
@@ -71,6 +73,14 @@ export interface GameState {
   clicks: ClickAnimation[];
   hasNewLabItem: boolean;
 
+  // Auth & Cloud
+  user: any;
+  syncStatus: 'saved' | 'syncing' | 'error' | 'offline';
+  showAuthModal: boolean;
+  setShowAuthModal: (val: boolean) => void;
+  isGuest: boolean;
+  setIsGuest: (val: boolean) => void;
+
   // Actions
   handleClick: (e: React.MouseEvent) => void;
   buyUpgrade: (id: string) => void;
@@ -105,6 +115,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [points, setPoints] = useState(0);
   const [clickPower, setClickPower] = useState(1);
   const [autoPoints, setAutoPoints] = useState(0);
+
+  // Auth State
+  const [user, setUser] = useState<any>(null);
+  const [syncStatus, setSyncStatus] = useState<'saved' | 'syncing' | 'error' | 'offline'>('offline');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
+  const lastSaveTime = useRef<number>(Date.now());
 
   // Inventory
   const [upgrades, setUpgrades] = useState(() =>
@@ -165,12 +182,74 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [crashTime, setCrashTime] = useState(0);
   const [currentIQ, setCurrentIQ] = useState(100);
 
-  // --- LOAD/SAVE ---
+  // --- AUTH & LOAD/SAVE ---
+
+  // 1. Check Auth on Mount
   useEffect(() => {
-    const saved = localStorage.getItem(SAVE_KEY);
-    if (saved) {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (!session?.user) {
+         // Check if guest
+         if (!localStorage.getItem(SAVE_KEY)) {
+             setShowAuthModal(true);
+         } else {
+             setIsGuest(true);
+         }
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        setIsGuest(false);
+        setShowAuthModal(false);
+        loadFromCloud(session.user.id);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // 2. Load Function (Cloud or Local)
+  const loadFromCloud = async (userId: string) => {
       try {
-        const data = JSON.parse(saved);
+          const { data, error } = await supabase
+            .from('game_saves')
+            .select('save_data, last_updated')
+            .eq('user_id', userId)
+            .single();
+
+          if (data && data.save_data) {
+             const cloudData = data.save_data;
+             const localSaved = localStorage.getItem(SAVE_KEY);
+
+             let useCloud = true;
+             if (localSaved) {
+                 const localData = JSON.parse(localSaved);
+                 // Simple conflict check: if local has significantly more playtime or earnings
+                 if ((localData.totalEarnings || 0) > (cloudData.totalEarnings || 0) + 1000) {
+                     if (!window.confirm("Znaleziono zapis w chmurze, ale lokalny wygląda na nowszy/lepszy. Czy na pewno chcesz wczytać chmurę?")) {
+                         useCloud = false;
+                     }
+                 }
+             }
+
+             if (useCloud) {
+                 applySaveData(cloudData);
+                 console.log("Loaded from cloud");
+             } else {
+                 // If we chose local, force a save to cloud soon
+                 setSyncStatus('syncing');
+             }
+          }
+      } catch (e) {
+          console.error("Cloud load error:", e);
+      }
+  };
+
+  const applySaveData = (data: any) => {
         setPoints(data.points || 0);
         setTotalClicks(data.totalClicks || 0);
         setTotalEarnings(data.totalEarnings || 0);
@@ -201,32 +280,70 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
           setUpgrades(mergedUpgrades);
         }
-      } catch (e) {
-        console.error("Failed to load save data", e);
-      }
+  };
+
+  // 3. Initial Local Load (if Guest or Offline fallback)
+  useEffect(() => {
+    if (!user) {
+        const saved = localStorage.getItem(SAVE_KEY);
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                applySaveData(data);
+                setIsGuest(true);
+            } catch (e) {
+                console.error("Failed to load local save data", e);
+            }
+        }
     }
-  }, []);
+  }, [user]); // Re-run if user logs out
+
+  // 4. State Refs for Cloud Save (to avoid stale closures in interval)
+  const gameStateRef = useRef<any>(null);
 
   useEffect(() => {
     const data = {
-      points,
-      totalClicks,
-      totalEarnings,
-      totalPlayTime,
-      unlockedAchievements,
-      prestigeLevel,
-      hardware,
-      itemEvolutions,
-      unlockedResearch,
+      points, totalClicks, totalEarnings, totalPlayTime, unlockedAchievements, prestigeLevel,
+      hardware, itemEvolutions, unlockedResearch,
       upgrades: upgrades.map(({ id, level, currentCost }) => ({ id, level, currentCost })),
-      ownedThemes,
-      ownedMusic,
-      activeThemeId,
-      activeMusicId,
-      volume
+      ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume
     };
+    gameStateRef.current = data;
+
+    // Always save to local storage immediately
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
   }, [points, upgrades, hardware, itemEvolutions, unlockedResearch, ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume, totalClicks, totalEarnings, totalPlayTime, unlockedAchievements, prestigeLevel]);
+
+  // 5. Cloud Save Loop (30s Interval)
+  useEffect(() => {
+    if (!user) {
+        setSyncStatus('offline');
+        return;
+    }
+
+    const saveToCloud = async () => {
+        if (!gameStateRef.current) return;
+
+        setSyncStatus('syncing');
+        const { error } = await supabase
+            .from('game_saves')
+            .upsert({
+                user_id: user.id,
+                save_data: gameStateRef.current,
+                last_updated: new Date().toISOString()
+            });
+
+        if (error) {
+            console.error("Cloud save failed:", error);
+            setSyncStatus('error');
+        } else {
+            setSyncStatus('saved');
+        }
+    };
+
+    const intervalId = setInterval(saveToCloud, 30000);
+    return () => clearInterval(intervalId);
+  }, [user]);
 
   // --- STATS CALCULATION ---
   useEffect(() => {
@@ -651,11 +768,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     handleInspekcjaClick, buyTheme, buyMusic, gamble, prestigeReset, hardReset,
 
     setActiveThemeId, setActiveMusicId, setVolume, setPanicMode, setHasNewLabItem,
-    getCurrentRank, formatTime
+    getCurrentRank, formatTime,
+    user, syncStatus, showAuthModal, setShowAuthModal, isGuest, setIsGuest
   };
 
   return (
     <GameContext.Provider value={value}>
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onGuest={() => { setShowAuthModal(false); setIsGuest(true); }} />
       {children}
     </GameContext.Provider>
   );
