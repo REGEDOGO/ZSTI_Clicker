@@ -5,27 +5,43 @@ const bcrypt = require('bcrypt');
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs'); // <--- DODANO: Moduł do obsługi plików
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// --- NAPRAWA BŁĘDU ENOENT ---
+// Definiujemy ścieżkę do folderu uploads (wewnątrz folderu server)
+const uploadDir = path.join(__dirname, 'uploads');
+
+// Sprawdzamy czy folder istnieje, jeśli nie - tworzymy go
+if (!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log('Utworzono folder uploads:', uploadDir);
+}
+// -----------------------------
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Allow large save data
-// Serve static files from 'uploads' directory
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Multer Storage Configuration
+// Serwowanie plików statycznych (zdjęć)
+// Dzięki temu frontend widzi pliki pod adresem http://localhost:3000/uploads/nazwa.jpg
+app.use('/uploads', express.static(uploadDir));
+
+// Konfiguracja Multer (Wgrywanie plików)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+        // Używamy zmiennej uploadDir, aby mieć pewność co do ścieżki
+        cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-        // Unique filename: timestamp-random.ext
+        // Unikalna nazwa pliku: timestamp-losowaLiczba.rozszerzenie
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, uniqueSuffix + path.extname(file.originalname));
     }
 });
+
 const upload = multer({ storage: storage });
 
 // Database Connection
@@ -228,13 +244,18 @@ app.get('/api/user/:userId', async (req, res) => {
 // UPLOAD AVATAR
 app.post('/api/upload-avatar', upload.single('avatar'), async (req, res) => {
     try {
+        // Uwaga: req.body może być puste w zależności od kolejności pól w FormData, 
+        // ale multer najpierw mieli plik. Jeśli userId przychodzi jako string, musimy go obsłużyć.
         const userId = req.body.userId;
-        if (!req.file || !userId) return res.status(400).json({ error: 'Brak pliku lub ID' });
+        
+        if (!req.file) return res.status(400).json({ error: 'Brak pliku' });
+        if (!userId) return res.status(400).json({ error: 'Brak ID użytkownika' });
 
         if (!pool) return res.status(500).json({ error: 'Database not initialized' });
 
         const fileUrl = `/uploads/${req.file.filename}`;
         await pool.execute('UPDATE users SET avatar_url = ? WHERE id = ?', [fileUrl, userId]);
+        
         res.json({ message: 'Avatar zaktualizowany', url: fileUrl });
     } catch (err) {
         console.error(err);
@@ -246,12 +267,15 @@ app.post('/api/upload-avatar', upload.single('avatar'), async (req, res) => {
 app.post('/api/upload-banner', upload.single('banner'), async (req, res) => {
     try {
         const userId = req.body.userId;
-        if (!req.file || !userId) return res.status(400).json({ error: 'Brak pliku lub ID' });
+        
+        if (!req.file) return res.status(400).json({ error: 'Brak pliku' });
+        if (!userId) return res.status(400).json({ error: 'Brak ID użytkownika' });
 
         if (!pool) return res.status(500).json({ error: 'Database not initialized' });
 
         const fileUrl = `/uploads/${req.file.filename}`;
         await pool.execute('UPDATE users SET banner_url = ? WHERE id = ?', [fileUrl, userId]);
+        
         res.json({ message: 'Baner zaktualizowany', url: fileUrl });
     } catch (err) {
         console.error(err);
@@ -260,13 +284,14 @@ app.post('/api/upload-banner', upload.single('banner'), async (req, res) => {
 });
 
 // 404 Handler for API
-app.use('/api/*', (req, res) => {
+app.use('/api', (req, res) => {
     res.status(404).json({ error: 'API endpoint not found' });
 });
 
 // Global Error Handler
 app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err);
+    // Upewniamy się, że zawsze zwracamy JSON, nawet przy krytycznym błędzie
     res.status(500).json({ error: 'Internal Server Error' });
 });
 
