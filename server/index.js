@@ -12,14 +12,16 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Allow large save data
-app.use('/uploads', express.static('uploads'));
+// Serve static files from 'uploads' directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Multer Storage
+// Multer Storage Configuration
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads/');
     },
     filename: (req, file, cb) => {
+        // Unique filename: timestamp-random.ext
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, uniqueSuffix + path.extname(file.originalname));
     }
@@ -51,12 +53,14 @@ initDB();
 
 // UPDATE USERNAME
 app.post('/api/update-username', async (req, res) => {
-    const { userId, newUsername } = req.body;
-    if (!userId || !newUsername) {
-        return res.status(400).json({ error: 'Brak danych' });
-    }
-
     try {
+        const { userId, newUsername } = req.body;
+        if (!userId || !newUsername) {
+            return res.status(400).json({ error: 'Brak danych' });
+        }
+
+        if (!pool) return res.status(500).json({ error: 'Database not initialized' });
+
         await pool.execute(
             'UPDATE users SET username = ? WHERE id = ?',
             [newUsername, userId]
@@ -73,12 +77,14 @@ app.post('/api/update-username', async (req, res) => {
 
 // REGISTER
 app.post('/api/register', async (req, res) => {
-    const { username, email, password } = req.body;
-    if (!username || !email || !password) {
-        return res.status(400).json({ error: 'Wszystkie pola są wymagane' });
-    }
-
     try {
+        const { username, email, password } = req.body;
+        if (!username || !email || !password) {
+            return res.status(400).json({ error: 'Wszystkie pola są wymagane' });
+        }
+
+        if (!pool) return res.status(500).json({ error: 'Database not initialized' });
+
         // Hash password
         const salt = await bcrypt.genSalt(10);
         const hash = await bcrypt.hash(password, salt);
@@ -100,13 +106,15 @@ app.post('/api/register', async (req, res) => {
 
 // LOGIN
 app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) {
-        return res.status(400).json({ error: 'Wymagany login i hasło' });
-    }
-
     try {
-        // Find user by username OR email (optional per request)
+        const { username, password } = req.body;
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Wymagany login i hasło' });
+        }
+
+        if (!pool) return res.status(500).json({ error: 'Database not initialized' });
+
+        // Find user by username OR email
         const [rows] = await pool.execute(
             'SELECT * FROM users WHERE username = ? OR email = ?',
             [username, username]
@@ -154,10 +162,12 @@ app.post('/api/login', async (req, res) => {
 
 // SAVE (Accepts userId, saveData)
 app.post('/api/save', async (req, res) => {
-    const { userId, saveData } = req.body;
-    if (!userId || !saveData) return res.status(400).json({ error: 'Brak danych' });
-
     try {
+        const { userId, saveData } = req.body;
+        if (!userId || !saveData) return res.status(400).json({ error: 'Brak danych' });
+
+        if (!pool) return res.status(500).json({ error: 'Database not initialized' });
+
         const jsonString = JSON.stringify(saveData);
         await pool.execute(
             'UPDATE users SET save_data = ? WHERE id = ?',
@@ -172,10 +182,12 @@ app.post('/api/save', async (req, res) => {
 
 // LOAD (GET /api/load/:userId)
 app.get('/api/load/:userId', async (req, res) => {
-    const userId = req.params.userId;
-    if (!userId) return res.status(400).json({ error: 'Brak ID użytkownika' });
-
     try {
+        const userId = req.params.userId;
+        if (!userId) return res.status(400).json({ error: 'Brak ID użytkownika' });
+
+        if (!pool) return res.status(500).json({ error: 'Database not initialized' });
+
         const [rows] = await pool.execute(
             'SELECT save_data FROM users WHERE id = ?',
             [userId]
@@ -197,8 +209,10 @@ app.get('/api/load/:userId', async (req, res) => {
 
 // GET USER PROFILE
 app.get('/api/user/:userId', async (req, res) => {
-    const userId = req.params.userId;
     try {
+        const userId = req.params.userId;
+        if (!pool) return res.status(500).json({ error: 'Database not initialized' });
+
         const [rows] = await pool.execute(
             'SELECT id, username, email, avatar_url, banner_url FROM users WHERE id = ?',
             [userId]
@@ -213,11 +227,13 @@ app.get('/api/user/:userId', async (req, res) => {
 
 // UPLOAD AVATAR
 app.post('/api/upload-avatar', upload.single('avatar'), async (req, res) => {
-    const userId = req.body.userId;
-    if (!req.file || !userId) return res.status(400).json({ error: 'Brak pliku lub ID' });
-
-    const fileUrl = `/uploads/${req.file.filename}`;
     try {
+        const userId = req.body.userId;
+        if (!req.file || !userId) return res.status(400).json({ error: 'Brak pliku lub ID' });
+
+        if (!pool) return res.status(500).json({ error: 'Database not initialized' });
+
+        const fileUrl = `/uploads/${req.file.filename}`;
         await pool.execute('UPDATE users SET avatar_url = ? WHERE id = ?', [fileUrl, userId]);
         res.json({ message: 'Avatar zaktualizowany', url: fileUrl });
     } catch (err) {
@@ -228,17 +244,30 @@ app.post('/api/upload-avatar', upload.single('avatar'), async (req, res) => {
 
 // UPLOAD BANNER
 app.post('/api/upload-banner', upload.single('banner'), async (req, res) => {
-    const userId = req.body.userId;
-    if (!req.file || !userId) return res.status(400).json({ error: 'Brak pliku lub ID' });
-
-    const fileUrl = `/uploads/${req.file.filename}`;
     try {
+        const userId = req.body.userId;
+        if (!req.file || !userId) return res.status(400).json({ error: 'Brak pliku lub ID' });
+
+        if (!pool) return res.status(500).json({ error: 'Database not initialized' });
+
+        const fileUrl = `/uploads/${req.file.filename}`;
         await pool.execute('UPDATE users SET banner_url = ? WHERE id = ?', [fileUrl, userId]);
         res.json({ message: 'Baner zaktualizowany', url: fileUrl });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Błąd bazy danych' });
     }
+});
+
+// 404 Handler for API
+app.use('/api/*', (req, res) => {
+    res.status(404).json({ error: 'API endpoint not found' });
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error('Unhandled Error:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
 });
 
 app.listen(PORT, () => {
