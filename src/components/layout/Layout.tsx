@@ -10,6 +10,8 @@ import { Lab } from '../views/Lab';
 import { Profile } from '../views/Profile';
 import { Settings } from '../views/Settings';
 import { Achievements } from '../views/Achievements'; // Will create this too since it's in the tab list
+import { Odometer } from '../ui/Odometer';
+import { SyncStatus } from '../ui/SyncStatus';
 import { NEWS_TICKER } from '../../data/gameData';
 
 export const Layout: React.FC = () => {
@@ -26,9 +28,10 @@ export const Layout: React.FC = () => {
     isCrashed,
     crashTime,
     focusMode,
-    activeQuote,
-    clicks
-  } = useGame() as any; // Using any temporarily for focusMode/activeQuote/clicks if they are missing in type but present in logic
+    clicks,
+    setShowAuthModal,
+    isGuest
+  } = useGame() as any;
 
   const [activeTab, setActiveTab] = useState('home');
 
@@ -173,13 +176,28 @@ export const Layout: React.FC = () => {
           <div className="flex flex-col md:flex-row gap-4 md:gap-8 text-right">
             <div>
                <div className="text-[10px] md:text-xs text-slate-400 uppercase tracking-wider mb-1">Punkty Absurdu</div>
-               <div className="text-xl md:text-3xl font-mono font-bold text-white">{points.toLocaleString()}</div>
+               <div className="text-xl md:text-3xl font-mono font-bold text-white">
+                 <Odometer value={points} />
+               </div>
             </div>
             <div>
                <div className="text-[10px] md:text-xs text-slate-400 uppercase tracking-wider mb-1">Na sekundę</div>
-               <div className="text-lg md:text-2xl font-mono font-bold" style={{ color: 'var(--theme-primary)' }}>+{autoPoints}</div>
+               <div className="text-lg md:text-2xl font-mono font-bold" style={{ color: 'var(--theme-primary)' }}>+<Odometer value={autoPoints} /></div>
             </div>
           </div>
+        </div>
+
+        {/* Sync Status Bar / Login Prompt */}
+        <div className="px-4 py-2 md:px-6 flex justify-end items-center gap-4 bg-black/10 backdrop-blur-sm border-b border-white/5">
+            <SyncStatus />
+            {isGuest && (
+                <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded-full text-white/80 transition-colors"
+                >
+                    Zaloguj się (Cloud Save)
+                </button>
+            )}
         </div>
 
         {/* Views */}
