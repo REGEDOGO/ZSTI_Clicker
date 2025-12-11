@@ -19,24 +19,18 @@ export const apiClient = {
     return handleResponse(res);
   },
 
-  async saveGame(token: string, saveData: any) {
+  async saveGame(userId: number, saveData: any) {
     const res = await fetch(`${API_URL}/save`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ saveData })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, saveData })
     });
     return handleResponse(res);
   },
 
-  async loadGame(token: string) {
-    const res = await fetch(`${API_URL}/load`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+  async loadGame(userId: number) {
+    const res = await fetch(`${API_URL}/load/${userId}`, {
+      method: 'GET'
     });
     return handleResponse(res);
   }

@@ -10,3 +10,6 @@
 12:43:49 PM [vite] hmr update /src/App.tsx, /src/index.css
 12:44:18 PM [vite] hmr update /src/context/GameContext.tsx, /src/index.css
 12:45:01 PM [vite] hmr update /src/components/auth/AuthModal.tsx, /src/index.css
+1:58:40 PM [vite] hmr update /src/index.css, /src/context/AuthContext.tsx, /src/context/GameContext.tsx
+1:59:08 PM [vite] hmr update /src/context/AuthContext.tsx, /src/index.css
+1:59:20 PM [vite] hmr update /src/context/GameContext.tsx, /src/index.css

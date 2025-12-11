@@ -118,7 +118,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [autoPoints, setAutoPoints] = useState(0);
 
   // Auth State
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [syncStatus, setSyncStatus] = useState<'saved' | 'syncing' | 'error' | 'offline'>('offline');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
@@ -196,14 +196,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } else {
         setIsGuest(false);
         setShowAuthModal(false);
-        if (token) loadFromCloud(token);
+        if (user?.id) loadFromCloud(user.id);
     }
-  }, [user, token]);
+  }, [user]);
 
   // 2. Load Function (Cloud or Local)
-  const loadFromCloud = async (authToken: string) => {
+  const loadFromCloud = async (userId: number) => {
       try {
-          const data = await apiClient.loadGame(authToken);
+          const data = await apiClient.loadGame(userId);
 
           if (data && data.saveData) {
              const cloudData = data.saveData;
@@ -297,7 +297,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // 5. Cloud Save Loop (30s Interval)
   useEffect(() => {
-    if (!user || !token) {
+    if (!user || !user.id) {
         setSyncStatus('offline');
         return;
     }
@@ -307,7 +307,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         setSyncStatus('syncing');
         try {
-            await apiClient.saveGame(token, gameStateRef.current);
+            await apiClient.saveGame(user.id, gameStateRef.current);
             setSyncStatus('saved');
         } catch (error) {
             console.error("Cloud save failed:", error);
@@ -317,7 +317,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const intervalId = setInterval(saveToCloud, 30000);
     return () => clearInterval(intervalId);
-  }, [user, token]);
+  }, [user]);
 
   // --- STATS CALCULATION ---
   useEffect(() => {
