@@ -5,6 +5,8 @@ interface User {
   id: number;
   username: string;
   email: string;
+  avatar_url?: string;
+  banner_url?: string;
 }
 
 interface AuthContextType {
@@ -12,6 +14,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<any>;
   register: (username: string, email: string, password: string) => Promise<any>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -61,8 +64,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('auth_user');
   };
 
+  const refreshUser = async () => {
+      if (user?.id) {
+          try {
+              const updatedUser = await apiClient.getUser(user.id);
+              setUser(updatedUser);
+              localStorage.setItem('auth_user', JSON.stringify(updatedUser));
+          } catch (e) {
+              console.error("Failed to refresh user", e);
+          }
+      }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, register, logout, refreshUser, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

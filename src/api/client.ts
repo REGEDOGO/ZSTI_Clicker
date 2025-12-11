@@ -42,6 +42,37 @@ export const apiClient = {
       method: 'GET'
     });
     return handleResponse(res);
+  },
+
+  async getUser(userId: number) {
+    const res = await fetch(`${API_URL}/user/${userId}`, {
+      method: 'GET'
+    });
+    return handleResponse(res);
+  },
+
+  async uploadAvatar(userId: number, file: File) {
+    const formData = new FormData();
+    formData.append('userId', userId.toString());
+    formData.append('avatar', file);
+
+    const res = await fetch(`${API_URL}/upload-avatar`, {
+      method: 'POST',
+      body: formData
+    });
+    return handleResponse(res);
+  },
+
+  async uploadBanner(userId: number, file: File) {
+    const formData = new FormData();
+    formData.append('userId', userId.toString());
+    formData.append('banner', file);
+
+    const res = await fetch(`${API_URL}/upload-banner`, {
+      method: 'POST',
+      body: formData
+    });
+    return handleResponse(res);
   }
 };
 
