@@ -63,6 +63,8 @@ export interface GameState {
 
   coffeeLevel: number;
   overclockTime: number;
+  totalOverclocks: number;
+  maxCps: number;
   isCrashed: boolean;
   crashTime: number;
 
@@ -178,6 +180,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [newsIndex, setNewsIndex] = useState(0);
   const [panicMode, setPanicMode] = useState(false);
   const [overclockTime, setOverclockTime] = useState(0);
+  const [totalOverclocks, setTotalOverclocks] = useState(0);
+  const [maxCps, setMaxCps] = useState(0);
   const [isCrashed, setIsCrashed] = useState(false);
   const [crashTime, setCrashTime] = useState(0);
   const [currentIQ, setCurrentIQ] = useState(100);
@@ -235,6 +239,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTotalClicks(data.totalClicks || 0);
         setTotalEarnings(data.totalEarnings || 0);
         setTotalPlayTime(data.totalPlayTime || 0);
+        setTotalOverclocks(data.totalOverclocks || 0);
+        setMaxCps(data.maxCps || 0);
         setUnlockedAchievements(data.unlockedAchievements || []);
         setPrestigeLevel(data.prestigeLevel || 0);
         setHardware(prev => ({ ...prev, ...(data.hardware || {}) }));
@@ -287,13 +293,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       points, totalClicks, totalEarnings, totalPlayTime, unlockedAchievements, prestigeLevel,
       hardware, itemEvolutions, unlockedResearch,
       upgrades: upgrades.map(({ id, level, currentCost }) => ({ id, level, currentCost })),
-      ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume
+      ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume,
+      maxCps, totalOverclocks
     };
     gameStateRef.current = data;
 
     // Always save to local storage immediately
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-  }, [points, upgrades, hardware, itemEvolutions, unlockedResearch, ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume, totalClicks, totalEarnings, totalPlayTime, unlockedAchievements, prestigeLevel]);
+  }, [points, upgrades, hardware, itemEvolutions, unlockedResearch, ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume, totalClicks, totalEarnings, totalPlayTime, unlockedAchievements, prestigeLevel, maxCps, totalOverclocks]);
 
   // 5. Cloud Save Loop (30s Interval)
   useEffect(() => {
@@ -383,10 +390,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       baseAuto = 0;
     }
 
+    const finalAuto = Math.floor(baseAuto * globalMultiplier);
     setClickPower(Math.floor(baseClick * globalMultiplier));
-    setAutoPoints(Math.floor(baseAuto * globalMultiplier));
+    setAutoPoints(finalAuto);
 
-  }, [upgrades, hardware, prestigeLevel, overclockTime, isCrashed, itemEvolutions, coffeeLevel, coffeeBuffEndTime, unlockedResearch, isCoffeeUnlocked]);
+    if (finalAuto > maxCps) {
+        setMaxCps(finalAuto);
+    }
+
+  }, [upgrades, hardware, prestigeLevel, overclockTime, isCrashed, itemEvolutions, coffeeLevel, coffeeBuffEndTime, unlockedResearch, isCoffeeUnlocked, maxCps]);
 
   // --- THEME ---
   useEffect(() => {
@@ -645,6 +657,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (cool.durationAdd) duration += cool.durationAdd;
     }
     setOverclockTime(duration);
+    setTotalOverclocks(prev => prev + 1);
   };
 
   const handleInspekcjaClick = () => {
@@ -735,7 +748,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     points, autoPoints, clickPower, totalClicks, totalEarnings, totalPlayTime, prestigeLevel,
     upgrades, hardware, itemEvolutions, unlockedResearch, isCoffeeUnlocked, unlockedAchievements,
     ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume,
-    coffeeLevel, overclockTime, isCrashed, crashTime,
+    coffeeLevel, overclockTime, totalOverclocks, maxCps, isCrashed, crashTime,
     activeQuote, newsIndex, currentIQ, inspekcjaVisible, panicMode, clicks, hasNewLabItem,
 
     handleClick, buyUpgrade, buyHardware, buyResearch, evolveItem, drinkCoffee, activateOverclock,

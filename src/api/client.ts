@@ -1,6 +1,15 @@
 const API_URL = 'http://localhost:3000/api';
 
 export const apiClient = {
+  async updateUsername(userId: number, newUsername: string) {
+    const res = await fetch(`${API_URL}/update-username`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, newUsername })
+    });
+    return handleResponse(res);
+  },
+
   async register(username: string, email: string, password: string) {
     const res = await fetch(`${API_URL}/register`, {
       method: 'POST',
