@@ -4,7 +4,7 @@ import { apiClient } from '../../api/client';
 import { Search, Globe, User as UserIcon, X, Shield, Star, MousePointer2, CreditCard, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const BASE_URL = 'http://localhost:3000'; // Keep for now as images are served from backend, but in prod should be env or relative
+const BASE_URL = 'http://localhost:3000';
 
 interface UserSummary {
   id: number;
@@ -35,14 +35,11 @@ export const Social: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<PublicProfile | null>(null);
   const [inspectLoading, setInspectLoading] = useState(false);
 
-  // Debounce Search
+  // --- NAPRAWA LOGIKI WYSZUKIWANIA ---
+  // Teraz wyszukuje zawsze, nawet jak query jest puste (pobiera wtedy domyślną listę użytkowników)
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      if (query.trim()) {
-        performSearch(query);
-      } else {
-        setResults([]);
-      }
+      performSearch(query);
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
@@ -51,6 +48,7 @@ export const Social: React.FC = () => {
   const performSearch = async (q: string) => {
     setLoading(true);
     try {
+      // Backend z SQL "LIKE %%" zwróci wszystkich użytkowników (limit 20), jeśli q jest puste
       const data = await apiClient.searchUsers(q);
       setResults(data);
     } catch (err) {
@@ -59,6 +57,7 @@ export const Social: React.FC = () => {
       setLoading(false);
     }
   };
+  // ------------------------------------
 
   const handleInspect = async (userId: number) => {
     setInspectLoading(true);
@@ -139,9 +138,9 @@ export const Social: React.FC = () => {
              </motion.div>
           ))}
 
-          {!loading && query && results.length === 0 && (
+          {!loading && results.length === 0 && (
               <div className="col-span-full text-center py-12 text-slate-500">
-                  Nie znaleziono agentów pasujących do wzorca.
+                  {query ? "Nie znaleziono agentów pasujących do wzorca." : "Brak użytkowników w bazie."}
               </div>
           )}
       </div>

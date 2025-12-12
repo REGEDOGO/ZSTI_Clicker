@@ -341,58 +341,450 @@ export const NEWS_TICKER = [
 ];
 
 export const RANKS = [
-  { threshold: 0, title: "Pachołek Dyżurnego" },
-  { threshold: 500, title: "Konsument Mini Pizzy" },
-  { threshold: 1500, title: "Złodziej Kabli RJ45" },
-  { threshold: 3000, title: "Bywalec Palarni (Premium)" },
-  { threshold: 7500, title: "Ocalały z Sali 202 (Hades)" },
-  { threshold: 15000, title: "Strażnik Drzwi Bez Zawiasów" },
-  { threshold: 30000, title: "Saper Parkingu Szkolnego" },
-  { threshold: 50000, title: "Technik Spalonego Komputera w 309" },
-  { threshold: 100000, title: "Weteran 'Ptoszka'" },
-  { threshold: 200000, title: "Poszukiwacz Gaming Night" },
-  { threshold: 500000, title: "Magister Cytrynologii" },
-  { threshold: 1000000, title: "Świadek 3 Stycznia 2023" },
-  { threshold: 2500000, title: "Sigma Kornaś" },
-  { threshold: 5000000, title: "Prorok Nierodka" },
-  { threshold: 10000000, title: "Imperator E-Peta" },
-  { threshold: 50000000, title: "Awatar Czasu (Władca Dzwonka)" },
-  { threshold: 100000000, title: "Minister Edukacji Wszechświata" },
-  { threshold: 1000000000, title: "Byt Absolutny (Librus)" }
+  // --- POZIOMY 1-10: PŁOTKI I AMATORZY (0 - 4k) ---
+  { threshold: 1, title: "Pachołek Dyżurnego" },
+  { threshold: 1024, title: "Zapominacz Obuwia Zmiennego" },
+  { threshold: 2048, title: "Konsument Mini Pizzy" },
+  { threshold: 4096, title: "Tester Kredy przy Tablicy" },
+  { threshold: 8192, title: "Posiadacz Jednego Długopisu" },
+  { threshold: 16384, title: "Złodziej Kabli RJ45" },
+  { threshold: 32768, title: "Obserwator Ziemniaka na Stołówce" },
+  { threshold: 65536, title: "Mistrz Painta (Bez Myszki)" },
+  { threshold: 128000, title: "Diler Odpowiedzi z Grupy B" },
+  { threshold: 256000, title: "Bywalec Palarni (Premium)" },
+
+  // --- POZIOMY 11-20: BYWALCY I KOMBINATORZY (4k - 15k) ---
+  { threshold: 512000, title: "Koneser Wody z Kranu" },
+  { threshold: 1024000, title: "Operator Szmaty do Tablicy" },
+  { threshold: 2048000, title: "Strażnik Ustawień Monitora" },
+  { threshold: 4096000, title: "Haker WiFi (Hasło: 12345678)" },
+  { threshold: 8192000, title: "Ocalały z Sali 202 (Hades)" },
+  { threshold: 16384000, title: "Negocjator Oceny Dopuszczającej" },
+  { threshold: 32768000, title: "Kolekcjoner Uwag Negatywnych" },
+  { threshold: 65536000, title: "Przemytnik Tostów na Lekcję" },
+  { threshold: 131072000, title: "Technik Resetowania Routera" },
+  { threshold: 262144000, title: "Strażnik Drzwi Bez Zawiasów" },
+
+  // --- POZIOMY 21-30: LOKALNI HEROSI (15k - 45k) ---
+  { threshold: 524288000, title: "Fanatyk Zupki Chińskiej (Na Sucho)" },
+  { threshold: 1048576000, title: "Wirtuoz Gry na Linijce" },
+  { threshold: 2097152000, title: "Ekspert od HTML (Tylko <br>)" },
+  { threshold: 10000000000000, title: "Symulant Choroby w Dniu Sprawdzianu" },
+  { threshold: 30000000000000, title: "Pogromca Automatu z Batonami" },
+  { threshold: 100000000000000, title: "Saper Parkingu Szkolnego" },
+  { threshold: 300000000000000, title: "Instalator WinRAR-a (Trial)" },
+  { threshold: 1000000000000000, title: "Kronikarz Plotek z Pokoju Nauczycielskiego" },
+  { threshold: 3000000000000000, title: "Mistrz Alt-Tab" },
+  { threshold: 10000000000000000, title: "Kapłan Czarnej Kawy z Automatu" },
+
+  // --- POZIOMY 31-40: ELITA TECHNICZNA (45k - 90k) ---
+  { threshold: 30000000000000000, title: "Technik Spalonego Komputera w 309" },
+  { threshold: 100000000000000000, title: "Architekt Bazy Danych w Excelu" },
+  { threshold: 300000000000000000, title: "Zaklinacz Błędu 404" },
+  { threshold: 1000000000000000000, title: "Poszukiwacz Zaginionego Pendrive'a" },
+  { threshold: 3000000000000000000, title: "Guru Lutownicy (Poparzone Palce)" },
+  { threshold: 10000000000000000000, title: "Władca Kabla HDMI" },
+  { threshold: 30000000000000000000, title: "Administrator Grupy Klasowej na Messengerze" },
+  { threshold: 100000000000000000000, title: "Znawca Memów z 2012 Roku" },
+  { threshold: 300000000000000000000, title: "Kierownik Wycieczki do Żabki" },
+  { threshold: 1000000000000000000000, title: "Ostatni Sprawiedliwy (Zrobił Zadanie Domowe)" },
+
+  // --- POZIOMY 41-50: LEGENDY KORYTARZA (95k - 200k) ---
+  { threshold: 3000000000000000000000, title: "Weteran 'Ptoszka'" },
+  { threshold: 10000000000000000000000, title: "Baron Energetyków" },
+  { threshold: 30000000000000000000000, title: "Seryjny Spóźnialski (Wina Autobusu)" },
+  { threshold: 100000000000000000000000, title: "Duch Szatni WF-u" },
+  { threshold: 300000000000000000000000, title: "Programista w Notatniku" },
+  { threshold: 1000000000000000000000000, title: "Złodziej Czasu Lekcyjnego" },
+  { threshold: 3000000000000000000000000, title: "Ekspert ds. Zwolnień Lekarskich" },
+  { threshold: 10000000000000000000000000, title: "Kustosz Męskiej Toalety" },
+  { threshold: 30000000000000000000000000, title: "Wielki Inkwizytor Ściągania" },
+  { threshold: 100000000000000000000000000, title: "Poszukiwacz Gaming Night" },
+
+  // --- POZIOMY 51-60: WTJEMNICZENI (200k - 500k) ---
+  { threshold: 300000000000000000000000000, title: "Szaman Formatowania Dysku" },
+  { threshold: 1000000000000000000000000000, title: "Mecenas 'Nie Było Mnie Wtedy'" },
+  { threshold: 3000000000000000000000000000, title: "Strażnik Świętego Spokoju Woźnej" },
+  { threshold: 10000000000000000000000000000, title: "Wirtuoz Gry w Karty na Tyle Sali" },
+  { threshold: 30000000000000000000000000000, title: "Haker Elektrody" },
+  { threshold: 100000000000000000000000000000, title: "Przemytnik Przedłużacza" },
+  { threshold: 300000000000000000000000000000, title: "Cesarz Frekwencji Poniżej 50%" },
+  { threshold: 1000000000000000000000000000000, title: "Wyznawca Blue Screen of Death" },
+  { threshold: 3000000000000000000000000000000, title: "Operator Projektora (Bez Pilota)" },
+  { threshold: 10000000000000000000000000000000, title: "Magister Cytrynologii" },
+
+  // --- POZIOMY 61-70: ABSURD I CHAOS (500k - 1.5M) ---
+  { threshold: 30000000000000000000000000000000, title: "Lord Vader Języka Polskiego" },
+  { threshold: 100000000000000000000000000000000, title: "Wynalazca Perpetuum Mobile z Taśmy Klejącej" },
+  { threshold: 300000000000000000000000000000000, title: "Widmo Biblioteki Szkolnej" },
+  { threshold: 1000000000000000000000000000000000, title: "Agent 007 (0 Umiejętności, 0 Chęci, 7 Zagrożeń)" },
+  { threshold: 3000000000000000000000000000000000, title: "Książę Lagów" },
+  { threshold: 10000000000000000000000000000000000, title: "Dyrektor ds. Spania na Ławce" },
+  { threshold: 30000000000000000000000000000000000, title: "Świadek 3 Stycznia 2023" },
+  { threshold: 100000000000000000000000000000000000, title: "Przewodnik po Szkolnych Podziemiach" },
+  { threshold: 300000000000000000000000000000000000, title: "Mentor Pierwszaków (Zły Wpływ)" },
+  { threshold: 1000000000000000000000000000000000000, title: "Chodząca Encyklopedia Wymówek" },
+
+  // --- POZIOMY 71-80: POZIOM MITOLOGICZNY (1.5M - 5M) ---
+  { threshold: 3000000000000000000000000000000000000, title: "Arcymag Skrętki UTP" },
+  { threshold: 10000000000000000000000000000000000000, title: "Tytan Pracy (W Minecraft)" },
+  { threshold: 30000000000000000000000000000000000000, title: "Prorok Ostatniego Dzwonka" },
+  { threshold: 100000000000000000000000000000000000000, title: "Władca Pierścieni (Tłokowych)" },
+  { threshold: 300000000000000000000000000000000000000, title: "Głos z Głośnika Radiowęzła" },
+  { threshold: 1000000000000000000000000000000000000000, title: "Sigma Kornaś" },
+  { threshold: 3000000000000000000000000000000000000000, title: "Awatar Zepsutej Drukarki" },
+  { threshold: 10000000000000000000000000000000000000000, title: "Patron Spadających Tynków" },
+  { threshold: 30000000000000000000000000000000000000000, title: "Wszechwidzące Oko Monitoringu" },
+  { threshold: 100000000000000000000000000000000000000000, title: "Konsul Generalny w Gabinecie Pielęgniarki" },
+
+  // --- POZIOMY 81-90: BOSSOWIE LORE (5M - 50M) ---
+  { threshold: 300000000000000000000000000000000000000000, title: "Prorok Nierodka" },
+  { threshold: 1000000000000000000000000000000000000000000, title: "Demiurg Planu Lekcji" },
+  { threshold: 3000000000000000000000000000000000000000000, title: "Nieśmiertelny (Powtarza Klasę 3 Raz)" },
+  { threshold: 10000000000000000000000000000000000000000000, title: "Strażnik Kluczy do Sali Informatycznej" },
+  { threshold: 30000000000000000000000000000000000000000000, title: "Imperator E-Peta" },
+  { threshold: 100000000000000000000000000000000000000000000, title: "Wielki Zderzacz Hadronów (W Szatni)" },
+  { threshold: 300000000000000000000000000000000000000000000, title: "Osobliwość Czasoprzestrzenna" },
+  { threshold: 1000000000000000000000000000000000000000000000, title: "Twórca Własnego Systemu Oceniania" },
+  { threshold: 3000000000000000000000000000000000000000000000, title: "Istota Wyższa Niż Dyrekcja" },
+  { threshold: 10000000000000000000000000000000000000000000000, title: "Architekt Matrixa Szkolnego" },
+
+  // --- POZIOMY 91-99: KOSMOS I ABSTRAKCJA (50M - 1MLD) ---
+  { threshold: 30000000000000000000000000000000000000000000000, title: "Awatar Czasu (Władca Dzwonka)" },
+  { threshold: 100000000000000000000000000000000000000000000000, title: "Galaktyczny Kurator Oświaty" },
+  { threshold: 300000000000000000000000000000000000000000000000, title: "Byt Złożony z Czystej Energii Monsterka" },
+  { threshold: 1000000000000000000000000000000000000000000000000, title: "Przedwieczny Uczeń" },
+  { threshold: 3000000000000000000000000000000000000000000000000, title: "Minister Edukacji Wszechświata" },
+  { threshold: 10000000000000000000000000000000000000000000000000, title: "Omega (Koniec Skali)" },
+  { threshold: 30000000000000000000000000000000000000000000000000, title: "Administrator Symulacji Życia" },
+  { threshold: 100000000000000000000000000000000000000000000000000, title: "Wielki Wybuch (Matura Rozszerzona)" },
+  { threshold: 300000000000000000000000000000000000000000000000000, title: "Transcendentny Byt Poza Skalą Ocen" },
+  
+  // --- POZIOM 100: OSTATECZNA FORMA ---
+  { threshold: 1000000000000000000000000000000000000000000000000000, title: "Byt Absolutny (Librus)" } 
 ];
 
 export const THEMES: Record<string, Theme> = {
+  // --- TIER 0: POCZĄTEK ---
   default: {
     id: 'default',
     name: "Domyślny Mrok",
     cost: 0,
     colors: { primary: '#10b981', secondary: '#8b5cf6', bg: '#020617', card: '#0f172a' }
   },
-  red: {
-    id: 'red',
-    name: "Krwawa Kartkówka",
+  
+  // --- TIER 1: SZKOLNA RZECZYWISTOŚĆ (Tanie) ---
+  grey_reality: {
+    id: 'grey_reality',
+    name: "Szara Rzeczywistość",
+    cost: 5000,
+    colors: { primary: '#9ca3af', secondary: '#4b5563', bg: '#1f2937', card: '#374151' }
+  },
+  chalkboard: {
+    id: 'chalkboard',
+    name: "Brudna Tablica",
     cost: 50000,
-    colors: { primary: '#ef4444', secondary: '#f97316', bg: '#18181b', card: '#27272a' }
+    colors: { primary: '#ffffff', secondary: '#86efac', bg: '#14532d', card: '#166534' }
   },
-  neon: {
-    id: 'neon',
-    name: "Cyber-Nierodka",
-    cost: 100000,
-    colors: { primary: '#22c55e', secondary: '#eab308', bg: '#052e16', card: '#000000' }
+  notebook: {
+    id: 'notebook',
+    name: "Wymięty Zeszyt",
+    cost: 125000,
+    colors: { primary: '#2563eb', secondary: '#ef4444', bg: '#f1f5f9', card: '#e2e8f0' } // Jasny motyw!
   },
-  gold: {
-    id: 'gold',
-    name: "Złoty Długopis",
+  ink_spill: {
+    id: 'ink_spill',
+    name: "Wylany Atrament",
+    cost: 500000,
+    colors: { primary: '#3b82f6', secondary: '#1e3a8a', bg: '#172554', card: '#1e3a8a' }
+  },
+
+  // --- TIER 2: KLIMAT NIERODKI (Średnie) ---
+  coffee_stain: {
+    id: 'coffee_stain',
+    name: "Kawa z Automatu",
     cost: 1000000,
+    colors: { primary: '#d97706', secondary: '#78350f', bg: '#451a03', card: '#271003' }
+  },
+  lemon_fresh: {
+    id: 'lemon_fresh',
+    name: "Zbyszko 3 Cytryny",
+    cost: 2500000,
+    colors: { primary: '#facc15', secondary: '#bef264', bg: '#422006', card: '#a16207' }
+  },
+  rust_bucket: {
+    id: 'rust_bucket',
+    name: "Rdza i Kurz",
+    cost: 4000000,
+    colors: { primary: '#ea580c', secondary: '#7c2d12', bg: '#2a1205', card: '#431407' }
+  },
+  old_pc: {
+    id: 'old_pc',
+    name: "Windows 95",
+    cost: 7500000,
+    colors: { primary: '#008080', secondary: '#c0c0c0', bg: '#004040', card: '#005555' }
+  },
+
+  // --- TIER 3: STRES I AGRESJA (Drogie) ---
+  fail_red: {
+    id: 'fail_red',
+    name: "Krwawa Jedynka",
+    cost: 22500000,
+    colors: { primary: '#ef4444', secondary: '#991b1b', bg: '#450a0a', card: '#7f1d1d' }
+  },
+  panic_attack: {
+    id: 'panic_attack',
+    name: "Napad Paniki",
+    cost: 1000000000,
+    colors: { primary: '#f472b6', secondary: '#be185d', bg: '#2e0216', card: '#500724' }
+  },
+  toxic_waste: {
+    id: 'toxic_waste',
+    name: "Radioaktywny Obiadek",
+    cost: 4800000000,
+    colors: { primary: '#a3e635', secondary: '#3f6212', bg: '#1a2e05', card: '#365314' }
+  },
+  bsod: {
+    id: 'bsod',
+    name: "Blue Screen Śmierci",
+    cost: 92000000000,
+    colors: { primary: '#ffffff', secondary: '#ffffff', bg: '#0000aa', card: '#0000cc' }
+  },
+
+  // --- TIER 4: ABSURD I SCI-FI (Bardzo Drogie) ---
+  hacker_green: {
+    id: 'hacker_green',
+    name: "Matrix z Biedronki",
+    cost: 200000000000,
+    colors: { primary: '#22c55e', secondary: '#166534', bg: '#000000', card: '#052e16' }
+  },
+  vaporwave: {
+    id: 'vaporwave',
+    name: "Cyber-Woźna 2077",
+    cost: 600000000000,
+    colors: { primary: '#d946ef', secondary: '#06b6d4', bg: '#2e1065', card: '#4c1d95' }
+  },
+  night_vision: {
+    id: 'night_vision',
+    name: "Noktowizor Ściągania",
+    cost: 900000000000,
+    colors: { primary: '#4ade80', secondary: '#22c55e', bg: '#064e3b', card: '#065f46' }
+  },
+  hotdog: {
+    id: 'hotdog',
+    name: "Hot Dog ze Sklepiku",
+    cost: 1500000000000,
+    colors: { primary: '#fbbf24', secondary: '#ef4444', bg: '#7f1d1d', card: '#9a3412' }
+  },
+
+  // --- TIER 5: LUKSUS I ENDGAME (Milionerzy) ---
+  gold_pen: {
+    id: 'gold_pen',
+    name: "Złoty Długopis",
+    cost: 8000000000000,
     colors: { primary: '#eab308', secondary: '#f59e0b', bg: '#1c1917', card: '#292524' }
+  },
+  royal_velvet: {
+    id: 'royal_velvet',
+    name: "Fotel Dyrektora",
+    cost: 36000000000000,
+    colors: { primary: '#c084fc', secondary: '#a855f7', bg: '#2e0b4e', card: '#4c1d95' }
+  },
+  diamond_sky: {
+    id: 'diamond_sky',
+    name: "Diamentowy Połysk",
+    cost: 87000000000000,
+    colors: { primary: '#67e8f9', secondary: '#06b6d4', bg: '#0f172a', card: '#1e293b' }
+  },
+  void_black: {
+    id: 'void_black',
+    name: "Otchłań Niewiedzy",
+    cost: 300000000000000,
+    colors: { primary: '#64748b', secondary: '#334155', bg: '#000000', card: '#0a0a0a' }
+  },
+
+  // --- TIER 6: SEKRETNE / DZIWNE ---
+  glitch: {
+    id: 'glitch',
+    name: "P̷o̷p̷s̷u̷t̷y̷ ̷K̷o̷d̷",
+    cost: 900000000000000,
+    colors: { primary: '#ff00ff', secondary: '#00ffff', bg: '#111111', card: '#222222' }
+  },
+  flashbang: {
+    id: 'flashbang',
+    name: "Wypalacz Oczu (Jasny)",
+    cost: 2500000000000000,
+    colors: { primary: '#000000', secondary: '#111111', bg: '#ffffff', card: '#f3f4f6' }
+  },
+  inversion: {
+    id: 'inversion',
+    name: "Negatyw Ocen",
+    cost: 8500000000000000,
+    colors: { primary: '#000000', secondary: '#ffffff', bg: '#e5e7eb', card: '#d1d5db' }
+  },
+  invisible: {
+    id: 'invisible',
+    name: "Wagarowicz (Stealth)",
+    cost: 100000000000000000,
+    colors: { primary: '#374151', secondary: '#1f2937', bg: '#111827', card: '#1f2937' } // Bardzo niski kontrast
   }
 };
 
+export interface MusicTrack {
+  id: string;
+  name: string;
+  path: string;
+  cost: number;
+}
+
 export const MUSIC_TRACKS: MusicTrack[] = [
-  { id: 'silence', name: "Cisza Egzaminacyjna", cost: 0 },
-  { id: 'lofi', name: "LoFi do Sprawdzania Prac", cost: 5000 },
-  { id: 'techno', name: "Techno Dzwonek", cost: 25000 },
-  { id: 'classical', name: "Symfonia Cierpienia", cost: 100000 }
+  // --- TIER 0: DARMOWE ---
+  { 
+    id: 'co_bylo_na_jutro', 
+    name: "Co Było Na Jutro?", 
+    path: '/music/CoByloNaJutro.mp3', 
+    cost: 0 
+  },
+  
+  // --- TIER 1: POCZĄTEK (5k - 20k) ---
+  { 
+    id: 'dluga_przerwa', 
+    name: "Długa Przerwa", 
+    path: '/music/DlugaPrzerwa.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'niezapowiedziana_kartkowka', 
+    name: "Niezapowiedziana Kartkówka", 
+    path: '/music/NiezapowiedzianeKartkowka.mp3', 
+    cost: 1
+  },
+  { 
+    id: 'godzina_przed', 
+    name: "Godzina Przed Sprawdzianem", 
+    path: '/music/GodzinaPrzedSprawdzianem.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'piata_klasa', 
+    name: "Piąta Klasa", 
+    path: '/music/PiataKlasa.mp3', 
+    cost: 1 
+  },
+
+  // --- TIER 2: ŚRODEK SEMESTRU (25k - 75k) ---
+  { 
+    id: 'pierwsza_klasa', 
+    name: "Pierwsza Klasa", 
+    path: '/music/PierwszaKlasa.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'przerwa_swiateczna', 
+    name: "Przerwa Świąteczna", 
+    path: '/music/PrzerwaSwiateczna.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'podstawy_podstaw', 
+    name: "Podstawy Podstaw", 
+    path: '/music/PodstawyPodstaw.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'egzamin_zawodowy', 
+    name: "Egzamin Zawodowy", 
+    path: '/music/EgzaminZawodowy.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'praktyki', 
+    name: "Praktyki", 
+    path: '/music/Praktyki.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'funkcja_kwadratowa', 
+    name: "Delta Ujemna", 
+    path: '/music/FunkcjaKwadratowa.mp3', 
+    cost: 1 
+  },
+
+  // --- TIER 3: LEGENDY SZKOLNE (100k - 500k) ---
+  { 
+    id: 'legenda_gaming_night', 
+    name: "Legenda Gaming Night", 
+    path: '/music/LegendaGamingNight.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'mundial', 
+    name: "Mundial na Lekcji", 
+    path: '/music/Mundial.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'sala_202', 
+    name: "Tajemnica Sali 202", 
+    path: '/music/Sala202.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'sala_314', 
+    name: "Sala 314", 
+    path: '/music/Sala314.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'pisanie_bez_chata', 
+    name: "Pisanie Kodu Bez Chata", 
+    path: '/music/PisanieBezChata.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'pawel_parzy', 
+    name: "Paweł Parzy", 
+    path: '/music/PawelParzy.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'na_logike', 
+    name: '"Na Logikę" Kiedy Pierwsze Zadanie', 
+    path: '/music/NaLogikeKiedyPierwszeZadanie.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'usuwanie_komentarzy', 
+    name: "Usuwanie Komentarzy z Kodu", 
+    path: '/music/UsuwanieKomentarzyZKodu.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'szpont', 
+    name: "Szpont", 
+    path: '/music/Szpont.mp3', 
+    cost: 1 
+  },
+
+  // --- TIER 4: ABSOLUTNY ENDGAME (1M+) ---
+  { 
+    id: 'niezapowiedziana_matura', 
+    name: "Niezapowiedziana Matura", 
+    path: '/music/NiezapowiedzianaMatura.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'lipiec_sierpien', 
+    name: "Lipiec i Sierpień", 
+    path: '/music/LipiecSierpien.mp3', 
+    cost: 1 
+  },
+  { 
+    id: 'piwnica', 
+    name: "Piwnica", 
+    path: '/music/Piwnica.mp3', 
+    cost: 1 
+  }
 ];
 
 export const SHOP_ITEMS: Upgrade[] = [

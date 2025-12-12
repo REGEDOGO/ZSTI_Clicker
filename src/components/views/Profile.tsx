@@ -3,8 +3,8 @@ import { useGame } from '../../context/GameContext';
 import { useAuth } from '../../context/AuthContext';
 import { apiClient } from '../../api/client';
 import {
-    CreditCard, Activity, MousePointer2, Star, Music, Palette, Trophy, Zap, ShoppingCart,
-    Save, LogOut, Edit2, Check, X, Shield, Lock, Image as ImageIcon, Camera, Unlock
+  CreditCard, Activity, MousePointer2, Star, Music, Palette, Trophy, Zap, ShoppingCart,
+  Save, LogOut, Edit2, Check, X, Shield, Lock, Image as ImageIcon, Camera, Unlock, User as UserIcon
 } from 'lucide-react';
 import { MUSIC_TRACKS, THEMES, ACHIEVEMENTS } from '../../data/gameData';
 import { motion } from 'framer-motion';
@@ -73,10 +73,8 @@ export const Profile: React.FC = () => {
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files?.[0] || !user?.id) return;
 
-      // Explicit Achievement Gating
       if (unlockedAchievements.length < 10) {
           alert("Odblokuj 10 osiągnięć, aby zmienić baner!");
-          // Reset input so change event can fire again if they select same file later
           e.target.value = '';
           return;
       }
@@ -90,7 +88,6 @@ export const Profile: React.FC = () => {
   };
 
   const handleManualSave = async () => {
-      // Simulate save feedback since actual save is automated/ref-based in GameContext
       setSaveStatus('saving');
       setTimeout(() => {
           setSaveStatus('saved');
@@ -105,181 +102,182 @@ export const Profile: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-8">
+    <div className="max-w-7xl mx-auto pb-12 space-y-8">
 
-        {/* HEADER SECTION: IDENTITY */}
-        <div className="relative bg-slate-900 border border-slate-700 rounded-3xl overflow-hidden shadow-2xl group/banner">
-
-            {/* Banner Background */}
-            <div
-                className="absolute inset-0 bg-cover bg-center transition-opacity opacity-50 group-hover/banner:opacity-70"
+        {/* --- HEADER: IDENTITY CARD --- */}
+        <div className="relative bg-slate-900 border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl group/banner isolate">
+            
+            {/* Banner Image */}
+            <div 
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover/banner:scale-105"
                 style={{
                     backgroundImage: user?.banner_url ? `url(${BASE_URL}${user.banner_url})` : undefined,
                     background: !user?.banner_url ? 'linear-gradient(to right, #0f172a, #1e293b)' : undefined
                 }}
-            />
+            >
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent" />
+            </div>
 
-            {/* Banner Overlay Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent" />
-
-            {/* Banner Edit Button */}
+            {/* Edit Banner Button */}
             {!isGuest && (
-                <div className="absolute top-4 right-4 opacity-0 group-hover/banner:opacity-100 transition-opacity z-20">
+                <div className="absolute top-6 right-6 opacity-0 group-hover/banner:opacity-100 transition-opacity z-20">
                     <button
                         onClick={() => {
                              if (unlockedAchievements.length < 10) {
                                 alert("Odblokuj 10 osiągnięć, aby zmienić baner!");
-                            } else {
+                             } else {
                                 bannerInputRef.current?.click();
-                            }
+                             }
                         }}
-                        className={`p-2 rounded-full backdrop-blur-sm transition-colors text-white ${
+                        className={`p-3 rounded-full backdrop-blur-md transition-all border border-white/10 shadow-lg ${
                             unlockedAchievements.length < 10
-                            ? 'bg-red-500/50 hover:bg-red-500/80 cursor-not-allowed'
-                            : 'bg-black/50 hover:bg-black/80'
+                            ? 'bg-red-500/20 text-red-200 hover:bg-red-500/40 cursor-not-allowed'
+                            : 'bg-black/40 text-white hover:bg-black/60'
                         }`}
                         title={unlockedAchievements.length < 10 ? "Wymaga 10 osiągnięć" : "Zmień Baner"}
                     >
                         {unlockedAchievements.length < 10 ? <Lock size={20} /> : <ImageIcon size={20} />}
                     </button>
-                    <input
-                        type="file"
-                        ref={bannerInputRef}
-                        onChange={handleBannerUpload}
-                        className="hidden"
-                        accept="image/*"
-                    />
+                    <input type="file" ref={bannerInputRef} onChange={handleBannerUpload} className="hidden" accept="image/*" />
                 </div>
             )}
 
-            <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 pt-32">
-
+            {/* Profile Info */}
+            <div className="relative z-10 px-8 pb-8 pt-32 md:pt-48 flex flex-col md:flex-row items-end md:items-center gap-8">
+                
                 {/* Avatar */}
-                <div className="relative group">
-                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-[var(--theme-primary)] overflow-hidden shadow-[0_0_30px_rgba(16,185,129,0.3)] bg-slate-800 relative z-10">
+                <div className="relative group shrink-0">
+                    <div className="w-36 h-36 md:w-48 md:h-48 rounded-full border-4 border-slate-900 bg-slate-800 shadow-2xl relative overflow-hidden">
                         <img
                             src={user?.avatar_url ? `${BASE_URL}${user.avatar_url}` : `https://placehold.co/400x400/1e293b/10b981?text=${(user?.username || 'G').charAt(0).toUpperCase()}`}
                             alt="Avatar"
                             className="w-full h-full object-cover"
                         />
-
+                        
                         {!isGuest && (
-                            <div
+                            <div 
                                 onClick={() => avatarInputRef.current?.click()}
-                                className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer backdrop-blur-sm"
                             >
-                                <Camera className="text-white" size={32} />
+                                <Camera className="text-white" size={40} />
                             </div>
                         )}
                     </div>
+                    
+                    {!isGuest && <input type="file" ref={avatarInputRef} onChange={handleAvatarUpload} className="hidden" accept="image/*" />}
 
-                    {!isGuest && (
-                        <input
-                            type="file"
-                            ref={avatarInputRef}
-                            onChange={handleAvatarUpload}
-                            className="hidden"
-                            accept="image/*"
-                        />
-                    )}
-
-                    <div className="absolute bottom-2 right-2 bg-slate-900 text-[var(--theme-primary)] text-xs font-bold px-2 py-1 rounded border border-slate-700 z-20">
+                    {/* Level Badge */}
+                    <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4 bg-slate-900 text-[var(--theme-primary)] text-xs md:text-sm font-bold px-3 py-1.5 rounded-full border border-white/10 shadow-lg z-20 flex items-center gap-1">
+                        <Star size={12} fill="currentColor" />
                         LVL {Math.floor(totalClicks / 1000)}
                     </div>
                 </div>
 
-                {/* Info */}
-                <div className="flex-1 text-center md:text-left z-10">
+                {/* Text Info */}
+                <div className="flex-1 w-full text-center md:text-left pb-2">
                     <div className="flex flex-col md:flex-row items-center gap-4 mb-2 justify-center md:justify-start">
-                    {isEditingName ? (
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="text"
-                                value={newUsername}
-                                onChange={(e) => setNewUsername(e.target.value)}
-                                className="bg-black/50 border border-slate-600 rounded px-3 py-1 text-xl font-bold text-white focus:outline-none focus:border-[var(--theme-primary)]"
-                            />
-                            <button onClick={handleUpdateName} className="p-2 bg-green-600 hover:bg-green-500 rounded text-white"><Check size={16} /></button>
-                            <button onClick={() => setIsEditingName(false)} className="p-2 bg-red-600 hover:bg-red-500 rounded text-white"><X size={16} /></button>
-                        </div>
-                    ) : (
-                        <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight flex items-center gap-3">
-                            {user?.username || "Gość"}
-                            {!isGuest && (
-                                <button
-                                    onClick={() => { setNewUsername(user?.username || ''); setIsEditingName(true); }}
-                                    className="text-slate-600 hover:text-[var(--theme-primary)] transition-colors"
-                                >
-                                    <Edit2 size={20} />
-                                </button>
-                            )}
-                        </h1>
-                    )}
+                        {isEditingName ? (
+                            <div className="flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/10">
+                                <input
+                                    type="text"
+                                    value={newUsername}
+                                    onChange={(e) => setNewUsername(e.target.value)}
+                                    className="bg-transparent border-none text-xl md:text-3xl font-bold text-white focus:outline-none px-2 w-full md:w-64"
+                                    autoFocus
+                                />
+                                <button onClick={handleUpdateName} className="p-2 bg-green-500/20 hover:bg-green-500/40 text-green-400 rounded-lg"><Check size={20} /></button>
+                                <button onClick={() => setIsEditingName(false)} className="p-2 bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded-lg"><X size={20} /></button>
+                            </div>
+                        ) : (
+                            <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter flex items-center gap-4 drop-shadow-lg">
+                                {user?.username || "Gość"}
+                                {!isGuest && (
+                                    <button 
+                                        onClick={() => { setNewUsername(user?.username || ''); setIsEditingName(true); }}
+                                        className="text-slate-500 hover:text-white transition-colors opacity-0 group-hover/banner:opacity-100"
+                                    >
+                                        <Edit2 size={24} />
+                                    </button>
+                                )}
+                            </h1>
+                        )}
+                    </div>
+                    {nameError && <p className="text-red-400 text-sm mb-2 font-bold bg-red-900/20 inline-block px-2 rounded">{nameError}</p>}
 
-                    {prestigeLevel > 0 && (
-                        <div className="flex items-center gap-1 bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full border border-yellow-500/50">
-                            <Star size={14} fill="currentColor" />
-                            <span className="font-bold">{prestigeLevel}</span>
-                        </div>
-                    )}
+                    <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 text-slate-300 font-medium mt-2">
+                        <span className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 border border-white/5">
+                            <Shield size={16} className="text-[var(--theme-primary)]" />
+                            {getCurrentRank()}
+                        </span>
+                        <span className="font-mono text-slate-500 text-sm">ID: #{user?.id || 'GUEST'}</span>
+                    </div>
                 </div>
-                {nameError && <p className="text-red-400 text-sm mb-2">{nameError}</p>}
 
-                <div className="text-slate-400 font-mono text-sm mb-4 flex flex-col md:flex-row gap-4 justify-center md:justify-start">
-                    <span>{getCurrentRank()}</span>
-                    <span className="text-slate-600">|</span>
-                    <span>ID: #{user?.id || 'GUEST'}</span>
-                </div>
-            </div>
-        </div>
-        </div>
-
-        {/* STATS FOLDER "TECZKA STATYSTYK" */}
-        <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-6 md:p-8">
-            <h2 className="text-2xl font-bold text-slate-200 mb-6 flex items-center gap-2">
-                <Shield className="text-[var(--theme-primary)]" /> Teczka Statystyk
-            </h2>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
-                <StatCard icon={Music} label="Kolekcja Muzyki" value={`${ownedMusic.length} / ${totalMusic}`} color="text-pink-400" />
-                <StatCard icon={Palette} label="Motywy Graficzne" value={`${ownedThemes.length} / ${totalThemes}`} color="text-purple-400" />
-                <StatCard icon={Trophy} label="Osiągnięcia" value={`${unlockedAchievements.length} / ${totalAchievements}`} color="text-yellow-400" />
-
-                <StatCard icon={MousePointer2} label="Całkowite Kliknięcia" value={totalClicks.toLocaleString()} color="text-blue-400" />
-                <StatCard icon={Activity} label="Czas w Grze" value={formatTime(totalPlayTime)} color="text-emerald-400" />
-                <StatCard icon={CreditCard} label="Całkowity Dochód" value={totalEarnings.toLocaleString()} color="text-green-400" />
-
-                <StatCard icon={Zap} label="Max CPS" value={maxCps?.toLocaleString() || '0'} color="text-orange-400" />
-                <StatCard icon={Activity} label="Ilość Podkręceń" value={totalOverclocks?.toString() || '0'} color="text-red-400" />
-                <StatCard icon={ShoppingCart} label="Licznik Zakupów" value={totalItemsBought.toString()} color="text-cyan-400" />
+                {/* Prestige Badge */}
+                {prestigeLevel > 0 && (
+                    <div className="absolute top-6 left-6 md:static md:mb-8 shrink-0">
+                        <div className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-yellow-500/20 to-orange-500/10 border border-yellow-500/30 text-yellow-400 shadow-[0_0_30px_rgba(234,179,8,0.15)]">
+                            <span className="text-2xl font-black">{prestigeLevel}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Prestiż</span>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
 
-        {/* CONTROL PANEL */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* --- STATS GRID --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* LEFT COLUMN: COLLECTION */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-bold text-slate-400 uppercase tracking-widest px-2">Kolekcja</h3>
+                <StatCard icon={Music} label="Muzyka" value={`${ownedMusic.length} / ${totalMusic}`} color="text-pink-400" bg="bg-pink-500/5" border="border-pink-500/20" />
+                <StatCard icon={Palette} label="Motywy" value={`${ownedThemes.length} / ${totalThemes}`} color="text-purple-400" bg="bg-purple-500/5" border="border-purple-500/20" />
+                <StatCard icon={Trophy} label="Osiągnięcia" value={`${unlockedAchievements.length} / ${totalAchievements}`} color="text-yellow-400" bg="bg-yellow-500/5" border="border-yellow-500/20" />
+            </div>
+
+            {/* MIDDLE COLUMN: PERFORMANCE */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-bold text-slate-400 uppercase tracking-widest px-2">Wyniki</h3>
+                <StatCard icon={MousePointer2} label="Kliknięcia" value={totalClicks.toLocaleString()} color="text-blue-400" bg="bg-blue-500/5" border="border-blue-500/20" />
+                <StatCard icon={Zap} label="Max CPS" value={maxCps?.toLocaleString() || '0'} color="text-orange-400" bg="bg-orange-500/5" border="border-orange-500/20" />
+                <StatCard icon={CreditCard} label="Suma Zarobków" value={totalEarnings.toLocaleString()} color="text-green-400" bg="bg-green-500/5" border="border-green-500/20" />
+            </div>
+
+            {/* RIGHT COLUMN: MISC */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-bold text-slate-400 uppercase tracking-widest px-2">Inne</h3>
+                <StatCard icon={Activity} label="Czas Gry" value={formatTime(totalPlayTime)} color="text-emerald-400" bg="bg-emerald-500/5" border="border-emerald-500/20" />
+                <StatCard icon={ShoppingCart} label="Zakupy" value={totalItemsBought.toString()} color="text-cyan-400" bg="bg-cyan-500/5" border="border-cyan-500/20" />
+                <StatCard icon={Activity} label="Podkręcenia" value={totalOverclocks?.toString() || '0'} color="text-red-400" bg="bg-red-500/5" border="border-red-500/20" />
+            </div>
+        </div>
+
+        {/* --- ACTION BAR --- */}
+        <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t border-white/5">
             <button
                 onClick={handleManualSave}
                 disabled={isGuest || saveStatus === 'saving'}
-                className="col-span-1 md:col-span-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 text-white p-4 rounded-xl font-bold flex flex-col items-center justify-center gap-2 transition-all shadow-lg hover:shadow-blue-900/50"
+                className="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-2xl font-bold transition-all shadow-lg hover:shadow-blue-500/25"
             >
                 {saveStatus === 'saving' ? <Activity className="animate-spin" /> : (saveStatus === 'saved' ? <Check /> : <Save />)}
-                <span>{saveStatus === 'saved' ? 'Zapisano!' : 'Zapisz Progres'}</span>
+                <span>{saveStatus === 'saved' ? 'Zapisano Pomyślnie!' : 'Zapisz Stan Gry'}</span>
             </button>
 
             {isGuest ? (
                  <button
                     onClick={() => setShowAuthModal(true)}
-                    className="col-span-1 bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-xl font-bold flex flex-col items-center justify-center gap-2 transition-all shadow-lg"
+                    className="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold transition-all shadow-lg hover:shadow-emerald-500/25"
                  >
                     <Unlock />
-                    <span>Zaloguj</span>
+                    <span>Zaloguj się</span>
                  </button>
             ) : (
                 <button
                     onClick={handleLogout}
-                    className="col-span-1 bg-red-900/50 hover:bg-red-700 text-red-200 hover:text-white p-4 rounded-xl font-bold flex flex-col items-center justify-center gap-2 transition-all border border-red-900"
+                    className="px-8 py-4 bg-slate-800 hover:bg-red-900/30 text-slate-300 hover:text-red-400 border border-white/5 hover:border-red-500/30 rounded-2xl font-bold transition-all flex items-center gap-2"
                 >
-                    <LogOut />
+                    <LogOut size={20} />
                     <span>Wyloguj</span>
                 </button>
             )}
@@ -289,15 +287,22 @@ export const Profile: React.FC = () => {
   );
 };
 
-const StatCard = ({ icon: Icon, label, value, color }: any) => (
+const StatCard = ({ icon: Icon, label, value, color, bg, border }: any) => (
     <motion.div
-        whileHover={{ y: -5 }}
-        className="bg-slate-800/50 border border-slate-700 p-4 rounded-xl flex flex-col justify-between h-28 relative overflow-hidden group"
+        whileHover={{ y: -2, scale: 1.01 }}
+        className={`relative p-5 rounded-2xl border ${border} ${bg} overflow-hidden flex items-center gap-5 transition-all`}
     >
-        <div className={`absolute top-2 right-2 opacity-20 group-hover:opacity-100 transition-opacity ${color}`}>
-            <Icon size={40} />
+        <div className={`p-3 rounded-xl bg-slate-900/50 ${color}`}>
+            <Icon size={24} />
         </div>
-        <div className={`text-xs uppercase font-bold tracking-wider text-slate-500`}>{label}</div>
-        <div className={`text-xl md:text-2xl font-mono font-bold ${color} z-10`}>{value}</div>
+        <div>
+            <div className="text-xs uppercase font-bold tracking-wider text-slate-500 mb-0.5">{label}</div>
+            <div className={`text-xl font-mono font-bold ${color}`}>{value}</div>
+        </div>
+        
+        {/* Background Icon Watermark */}
+        <div className={`absolute -right-4 -bottom-4 opacity-5 pointer-events-none ${color}`}>
+            <Icon size={80} />
+        </div>
     </motion.div>
 );

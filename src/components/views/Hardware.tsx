@@ -1,18 +1,10 @@
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '../../context/GameContext';
 import { HARDWARE_ITEMS } from '../../data/gameData';
 import {
-  Zap,
-  MousePointer2,
-  Monitor,
-  Keyboard,
-  Cpu,
-  CircuitBoard,
-  StickyNote,
-  Fan,
-  Plug,
-  Lock,
-  Box
+  Zap, MousePointer2, Monitor, Keyboard, Cpu, CircuitBoard, 
+  StickyNote, Fan, Plug, Lock, Box, Server, AlertTriangle
 } from 'lucide-react';
 
 export const Hardware: React.FC = () => {
@@ -26,354 +18,330 @@ export const Hardware: React.FC = () => {
   } = useGame();
 
   return (
-    <div className="max-w-6xl mx-auto">
-        {/* Rack Visualization */}
-        <div className="mb-8 p-6 bg-black/40 border border-white/10 rounded-3xl flex flex-col md:flex-row gap-8 items-center justify-center shadow-inner relative overflow-hidden">
-            {/* Background Grid */}
-            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-
-            <div className="flex flex-col items-center z-10">
-                <div className="w-32 h-24 bg-slate-800 rounded-lg border-4 border-slate-600 flex items-center justify-center mb-2 relative overflow-hidden">
-                {hardware.monitor === 0 && <span className="text-xs text-slate-500">Brak Monitora</span>}
-                {hardware.monitor === 1 && <div className="w-20 h-16 bg-gray-400 rounded-full opacity-50 animate-pulse">CRT 14 cali</div>}
-                {hardware.monitor === 2 && <div className="w-28 h-20 bg-blue-900/50 flex items-center justify-center text-xs">LCD <div className="w-1 h-1 bg-red-500 absolute top-4 left-8" /></div>}
-                {hardware.monitor === 3 && <div className="absolute inset-0 bg-[url('https://placehold.co/128x96/000/fff?text=WALL')] opacity-50" />}
+    <div className="max-w-7xl mx-auto space-y-12 pb-12">
+        
+        {/* --- TOP SECTION: VISUAL RACK --- */}
+        <div className="relative bg-slate-950 rounded-[2rem] border border-white/10 p-8 md:p-12 overflow-hidden shadow-2xl">
+            {/* Background Effects */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.05),transparent_70%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] opacity-30" />
+            
+            {/* Header */}
+            <div className="relative z-10 flex justify-between items-start mb-12">
+                <div>
+                    <h2 className="text-3xl font-black text-white flex items-center gap-3 tracking-tight">
+                        <Server className="text-[var(--theme-primary)]" /> CENTRUM OBLICZENIOWE
+                    </h2>
+                    <p className="text-slate-400 text-sm mt-1 font-mono">Status systemu: {overclockTime > 0 ? 'NIESTABILNY (OVERCLOCK)' : 'NOMINALNY'}</p>
                 </div>
-                <span className="text-xs text-slate-400 uppercase tracking-wider">Monitor (Tier {hardware.monitor})</span>
-            </div>
-
-            <div className="flex flex-col items-center z-10">
-                <div className="w-32 h-10 bg-slate-800 rounded-md border-b-4 border-slate-900 flex items-center justify-center mb-2">
-                {hardware.keyboard === 0 && <span className="text-xs text-slate-500">Brak Klawiatury</span>}
-                {hardware.keyboard === 1 && <div className="flex gap-1"><div className="w-2 h-2 bg-white/20"/> ...</div>}
-                {hardware.keyboard === 2 && <div className="text-[10px] font-mono">CLICK-CLACK</div>}
-                {hardware.keyboard === 3 && <div className="text-[10px] text-purple-400 animate-pulse">NEURAL LINK</div>}
-                </div>
-                <span className="text-xs text-slate-400 uppercase tracking-wider">Klawiatura (Tier {hardware.keyboard})</span>
-            </div>
-
-            <div className="flex flex-col items-center z-10">
-                <div className="w-16 h-24 bg-slate-800 rounded-t-full border-b-0 border-4 border-slate-700 flex items-center justify-center mb-2">
-                {hardware.mouse === 0 && <span className="text-[10px] text-slate-500">Brak</span>}
-                {hardware.mouse === 1 && <div className="w-2 h-2 rounded-full bg-gray-500" />}
-                {hardware.mouse === 2 && <div className="text-[10px]">Wireless</div>}
-                {hardware.mouse === 3 && <div className="w-full h-full bg-gradient-to-t from-red-500 via-green-500 to-blue-500 opacity-20 animate-pulse" />}
-                </div>
-                <span className="text-xs text-slate-400 uppercase tracking-wider">Mysz (Tier {hardware.mouse})</span>
-            </div>
-
-             {/* Case (Obudowa) */}
-             <div className="flex flex-col items-center z-10">
-                <div className="w-24 h-32 bg-slate-800 rounded-lg border-4 border-slate-600 flex items-center justify-center mb-2 relative overflow-hidden">
-                    {hardware.case === 0 && <span className="text-[10px] text-slate-500 text-center">Brak<br/>Obudowy</span>}
-                    {hardware.case === 1 && <div className="w-16 h-24 bg-amber-200/20 border-2 border-amber-200/40 rotate-1 flex items-center justify-center text-[8px] text-amber-200">MLEKO</div>}
-                    {hardware.case === 2 && <div className="w-20 h-28 bg-[#d4d4d0] border-2 border-gray-400 flex flex-col items-end p-1"><div className="w-2 h-2 bg-black/50 mb-1"/><div className="w-full h-px bg-black/20"/></div>}
-                    {hardware.case === 3 && <div className="w-20 h-28 bg-black/80 border-2 border-purple-500 animate-pulse shadow-[0_0_15px_rgba(168,85,247,0.5)] flex items-center justify-center"><div className="w-16 h-20 border border-white/10 flex flex-wrap gap-1 p-1"><div className="w-full h-2 bg-red-500/50"/><div className="w-full h-2 bg-green-500/50"/><div className="w-full h-2 bg-blue-500/50"/></div></div>}
-                </div>
-                <span className="text-xs text-slate-400 uppercase tracking-wider">Obudowa (Tier {hardware.case})</span>
-            </div>
-
-            {/* GPU/CPU Vis */}
-            <div className="flex flex-col items-center z-10 p-2 border border-white/5 rounded-lg bg-white/5">
-                <div className="flex gap-2">
-                <div className="flex flex-col items-center">
-                    <Cpu className={`mb-1 ${hardware.cpu > 0 ? 'text-[var(--theme-primary)]' : 'text-slate-600'}`} />
-                    <span className="text-[10px] text-slate-400">CPU T{hardware.cpu}</span>
-                </div>
-                <div className="flex flex-col items-center">
-                    <CircuitBoard className={`mb-1 ${hardware.gpu > 0 ? 'text-green-400' : 'text-slate-600'}`} />
-                    <span className="text-[10px] text-slate-400">GPU T{hardware.gpu}</span>
-                </div>
-                </div>
-            </div>
-
-            {/* Overclock Button */}
-            {unlockedResearch.includes('overclock_license') && (
-                <div className="ml-auto pl-8 border-l border-white/10 z-10">
-                    <button
+                
+                {/* Overclock Button (Reactor Core) */}
+                {unlockedResearch.includes('overclock_license') && (
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={activateOverclock}
                         disabled={overclockTime > 0}
-                        className={`w-40 h-40 rounded-full border-8 font-bold flex flex-col items-center justify-center transition-all
-                            ${overclockTime > 0
-                            ? 'border-yellow-500 bg-yellow-500/20 text-yellow-500 animate-pulse cursor-not-allowed'
-                            : 'border-red-600 bg-red-900/20 text-red-500 hover:bg-red-900/40 hover:scale-105 shadow-[0_0_30px_rgba(220,38,38,0.4)]'}
+                        className={`relative group px-8 py-4 rounded-xl font-bold flex items-center gap-4 transition-all overflow-hidden
+                            ${overclockTime > 0 
+                                ? 'bg-yellow-500/10 border border-yellow-500/50 text-yellow-500 cursor-not-allowed' 
+                                : 'bg-red-500/10 border border-red-500/50 text-red-500 hover:bg-red-500 hover:text-white hover:shadow-[0_0_40px_rgba(239,68,68,0.4)]'
+                            }
                         `}
                     >
-                        <Zap size={32} className="mb-2" />
-                        {overclockTime > 0 ? (
-                        <>
-                            <span className="text-2xl">{overclockTime}s</span>
-                            <span className="text-xs">PODKRĘCONO</span>
-                        </>
-                        ) : (
-                        <>
-                            <span className="text-lg text-center leading-tight">PODKRĘĆ<br/>SPRZĘT</span>
-                            <span className="text-[10px] mt-1 opacity-70">Ryzyko awarii 30%</span>
-                        </>
+                        {/* Animated Background for Active State */}
+                        {overclockTime > 0 && (
+                            <motion.div 
+                                className="absolute inset-0 bg-yellow-500/20"
+                                animate={{ opacity: [0.2, 0.5, 0.2] }}
+                                transition={{ repeat: Infinity, duration: 0.5 }}
+                            />
                         )}
-                    </button>
+
+                        <div className={`p-2 rounded-lg ${overclockTime > 0 ? 'bg-yellow-500 text-black' : 'bg-red-500 text-white group-hover:bg-white group-hover:text-red-500'} transition-colors`}>
+                            <Zap size={24} className={overclockTime > 0 ? 'animate-pulse' : ''} />
+                        </div>
+                        
+                        <div className="text-left relative z-10">
+                            <div className="text-xs font-mono opacity-80 uppercase tracking-wider">
+                                {overclockTime > 0 ? 'CZAS DO AWARII' : 'SYSTEM BOOST'}
+                            </div>
+                            <div className="text-xl font-black leading-none">
+                                {overclockTime > 0 ? `${overclockTime}s` : 'PODKRĘĆ'}
+                            </div>
+                        </div>
+                    </motion.button>
+                )}
+            </div>
+
+            {/* Visual Hardware Grid */}
+            <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                <HardwareSlot 
+                    icon={Monitor} 
+                    label="Monitor" 
+                    tier={hardware.monitor} 
+                    color="text-blue-400" 
+                    glow="shadow-blue-500/20"
+                    items={HARDWARE_ITEMS.monitor}
+                />
+                <HardwareSlot 
+                    icon={Keyboard} 
+                    label="Klawiatura" 
+                    tier={hardware.keyboard} 
+                    color="text-purple-400" 
+                    glow="shadow-purple-500/20"
+                    items={HARDWARE_ITEMS.keyboard}
+                />
+                <HardwareSlot 
+                    icon={MousePointer2} 
+                    label="Mysz" 
+                    tier={hardware.mouse} 
+                    color="text-emerald-400" 
+                    glow="shadow-emerald-500/20"
+                    items={HARDWARE_ITEMS.mouse}
+                />
+                <HardwareSlot 
+                    icon={Box} 
+                    label="Obudowa" 
+                    tier={hardware.case} 
+                    color="text-amber-400" 
+                    glow="shadow-amber-500/20"
+                    items={HARDWARE_ITEMS.case}
+                />
+                
+                {/* Combo Slot for Internals */}
+                <div className="col-span-2 md:col-span-4 lg:col-span-1 bg-white/5 rounded-2xl border border-white/5 p-4 flex flex-col justify-between relative group hover:bg-white/10 transition-colors">
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
+                    <div className="flex justify-between items-start mb-2">
+                        <Cpu className={hardware.cpu > 0 ? 'text-indigo-400' : 'text-slate-600'} />
+                        <span className="text-[10px] font-mono text-slate-500">INTERNALS</span>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-center text-xs">
+                            <span className="text-slate-400">CPU</span>
+                            <span className={`font-mono ${hardware.cpu > 0 ? 'text-indigo-400' : 'text-slate-600'}`}>T{hardware.cpu}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                            <span className="text-slate-400">GPU</span>
+                            <span className={`font-mono ${hardware.gpu > 0 ? 'text-green-400' : 'text-slate-600'}`}>T{hardware.gpu}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                            <span className="text-slate-400">RAM</span>
+                            <span className={`font-mono ${hardware.ram > 0 ? 'text-pink-400' : 'text-slate-600'}`}>T{hardware.ram}</span>
+                        </div>
+                    </div>
                 </div>
-            )}
+            </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-            {/* MICE */}
-            <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><MousePointer2 size={14}/> Myszki</h3>
-                {HARDWARE_ITEMS.mouse.map((item, idx) => {
-                    const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
-                    if (isLocked) return (
-                        <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
-                            <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane (Certyfikat)</span>
-                        </div>
-                    );
-                    return (
-                    <button
-                    key={item.id}
-                    onClick={() => buyHardware('mouse', idx + 1)}
-                    disabled={hardware.mouse >= idx + 1 || points < item.cost}
-                    className={`w-full p-3 rounded-lg border text-left transition-all relative overflow-hidden
-                        ${hardware.mouse >= idx + 1
-                        ? 'bg-[var(--theme-primary)]/10 border-[var(--theme-primary)] opacity-50'
-                        : (points >= item.cost ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/20 border-white/5 opacity-50')}
-                    `}
-                    >
-                    <h4 className="font-bold text-white text-xs mb-1">{item.name}</h4>
-                    <div className="text-[10px] font-mono text-[var(--theme-primary)] mb-1">+{item.effect} click</div>
-                    {hardware.mouse < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
-                    </button>
-                )})}
+
+        {/* --- UPGRADE SHOP --- */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
+            
+            {/* LEFT COLUMN: PERIPHERALS & CASE */}
+            <div className="space-y-12">
+                <CategorySection title="Peryferia & Obudowa" icon={Box}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <UpgradeGroup 
+                            title="Myszki" 
+                            icon={MousePointer2} 
+                            items={HARDWARE_ITEMS.mouse} 
+                            currentTier={hardware.mouse}
+                            onBuy={(tier) => buyHardware('mouse', tier)}
+                            points={points}
+                            locked={false}
+                            color="text-emerald-400"
+                        />
+                        <UpgradeGroup 
+                            title="Monitory" 
+                            icon={Monitor} 
+                            items={HARDWARE_ITEMS.monitor} 
+                            currentTier={hardware.monitor}
+                            onBuy={(tier) => buyHardware('monitor', tier)}
+                            points={points}
+                            locked={!unlockedResearch.includes('it_certificate')}
+                            color="text-blue-400"
+                        />
+                        <UpgradeGroup 
+                            title="Klawiatury" 
+                            icon={Keyboard} 
+                            items={HARDWARE_ITEMS.keyboard} 
+                            currentTier={hardware.keyboard}
+                            onBuy={(tier) => buyHardware('keyboard', tier)}
+                            points={points}
+                            locked={!unlockedResearch.includes('it_certificate')}
+                            color="text-purple-400"
+                        />
+                        <UpgradeGroup 
+                            title="Obudowy" 
+                            icon={Box} 
+                            items={HARDWARE_ITEMS.case} 
+                            currentTier={hardware.case}
+                            onBuy={(tier) => buyHardware('case', tier)}
+                            points={points}
+                            locked={!unlockedResearch.includes('it_certificate')}
+                            color="text-amber-400"
+                        />
+                    </div>
+                </CategorySection>
             </div>
 
-            {/* MONITORS */}
-            <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><Monitor size={14}/> Monitory</h3>
-                {HARDWARE_ITEMS.monitor.map((item, idx) => {
-                    const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
-                    if (isLocked) return (
-                        <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
-                            <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane (Certyfikat)</span>
+            {/* RIGHT COLUMN: INTERNALS (CPU/GPU/RAM) */}
+            <div className="space-y-12">
+                <CategorySection title="Podzespoły Bazowe" icon={Cpu}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <UpgradeGroup 
+                            title="Procesory" 
+                            icon={Cpu} 
+                            items={HARDWARE_ITEMS.cpu} 
+                            currentTier={hardware.cpu}
+                            onBuy={(tier) => buyHardware('cpu', tier)}
+                            points={points}
+                            locked={!unlockedResearch.includes('it_certificate')}
+                            color="text-indigo-400"
+                        />
+                        <UpgradeGroup 
+                            title="Grafika" 
+                            icon={CircuitBoard} 
+                            items={HARDWARE_ITEMS.gpu} 
+                            currentTier={hardware.gpu}
+                            onBuy={(tier) => buyHardware('gpu', tier)}
+                            points={points}
+                            locked={!unlockedResearch.includes('it_certificate')}
+                            color="text-green-400"
+                        />
+                        <UpgradeGroup 
+                            title="Pamięć RAM" 
+                            icon={StickyNote} 
+                            items={HARDWARE_ITEMS.ram} 
+                            currentTier={hardware.ram}
+                            onBuy={(tier) => buyHardware('ram', tier)}
+                            points={points}
+                            locked={!unlockedResearch.includes('it_certificate')}
+                            color="text-pink-400"
+                        />
+                        <div className="space-y-4">
+                            <UpgradeGroup 
+                                title="Chłodzenie" 
+                                icon={Fan} 
+                                items={HARDWARE_ITEMS.cooling} 
+                                currentTier={hardware.cooling}
+                                onBuy={(tier) => buyHardware('cooling', tier)}
+                                points={points}
+                                locked={!unlockedResearch.includes('it_certificate')}
+                                color="text-cyan-400"
+                            />
+                            <UpgradeGroup 
+                                title="Zasilanie" 
+                                icon={Plug} 
+                                items={HARDWARE_ITEMS.power} 
+                                currentTier={hardware.power}
+                                onBuy={(tier) => buyHardware('power', tier)}
+                                points={points}
+                                locked={!unlockedResearch.includes('it_certificate')}
+                                color="text-yellow-400"
+                            />
                         </div>
-                    );
-                    return (
-                    <button
-                    key={item.id}
-                    onClick={() => buyHardware('monitor', idx + 1)}
-                    disabled={hardware.monitor >= idx + 1 || points < item.cost}
-                    className={`w-full p-3 rounded-lg border text-left transition-all relative overflow-hidden
-                        ${hardware.monitor >= idx + 1
-                        ? 'bg-[var(--theme-primary)]/10 border-[var(--theme-primary)] opacity-50'
-                        : (points >= item.cost ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/20 border-white/5 opacity-50')}
-                    `}
-                    >
-                    <h4 className="font-bold text-white text-xs mb-1">{item.name}</h4>
-                    <div className="text-[10px] font-mono text-[var(--theme-primary)] mb-1">Mnożnik x{item.multiplier}</div>
-                    {hardware.monitor < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
-                    </button>
-                )})}
-            </div>
-
-            {/* KEYBOARDS */}
-            <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><Keyboard size={14}/> Klawiatury</h3>
-                {HARDWARE_ITEMS.keyboard.map((item, idx) => {
-                    const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
-                    if (isLocked) return (
-                        <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
-                            <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane (Certyfikat)</span>
-                        </div>
-                    );
-                    return (
-                    <button
-                    key={item.id}
-                    onClick={() => buyHardware('keyboard', idx + 1)}
-                    disabled={hardware.keyboard >= idx + 1 || points < item.cost}
-                    className={`w-full p-3 rounded-lg border text-left transition-all relative overflow-hidden
-                        ${hardware.keyboard >= idx + 1
-                        ? 'bg-[var(--theme-primary)]/10 border-[var(--theme-primary)] opacity-50'
-                        : (points >= item.cost ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/20 border-white/5 opacity-50')}
-                    `}
-                    >
-                    <h4 className="font-bold text-white text-xs mb-1">{item.name}</h4>
-                    <div className="text-[10px] font-mono text-yellow-500 mb-1">Odblokowuje Tier {item.unlockTier}</div>
-                    {hardware.keyboard < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
-                    </button>
-                )})}
-            </div>
-
-            {/* CASES (Obudowy) */}
-            <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><Box size={14}/> Obudowy</h3>
-                {HARDWARE_ITEMS.case.map((item, idx) => {
-                    const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
-                     if (isLocked) return (
-                        <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
-                            <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane (Certyfikat)</span>
-                        </div>
-                    );
-                    return (
-                    <button
-                        key={item.id}
-                        onClick={() => buyHardware('case', idx + 1)}
-                        disabled={hardware.case >= idx + 1 || points < item.cost}
-                        className={`w-full p-3 rounded-lg border text-left transition-all relative overflow-hidden
-                            ${hardware.case >= idx + 1
-                            ? 'bg-amber-500/10 border-amber-500 opacity-50'
-                            : (points >= item.cost ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/20 border-white/5 opacity-50')}
-                        `}
-                    >
-                        <h4 className="font-bold text-white text-xs mb-1">{item.name}</h4>
-                        <div className="text-[10px] font-mono text-amber-400 mb-1">{item.desc}</div>
-                        {hardware.case < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
-                    </button>
-                    );
-                })}
-            </div>
-
-            {/* RAM */}
-            <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><StickyNote size={14}/> RAM</h3>
-                {HARDWARE_ITEMS.ram.map((item, idx) => {
-                    const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
-                    if (isLocked) return (
-                        <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
-                            <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane (Certyfikat)</span>
-                        </div>
-                    );
-                    return (
-                    <button
-                        key={item.id}
-                        onClick={() => buyHardware('ram', idx + 1)}
-                        disabled={hardware.ram >= idx + 1 || points < item.cost}
-                        className={`w-full p-3 rounded-lg border text-left transition-all relative overflow-hidden
-                            ${hardware.ram >= idx + 1
-                            ? 'bg-purple-500/10 border-purple-500 opacity-50'
-                            : (points >= item.cost ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/20 border-white/5 opacity-50')}
-                        `}
-                    >
-                        <h4 className="font-bold text-white text-xs mb-1">{item.name}</h4>
-                        <div className="text-[10px] font-mono text-purple-400 mb-1">{item.desc}</div>
-                        {hardware.ram < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
-                    </button>
-                    );
-                })}
-            </div>
-
-            {/* COOLING */}
-            <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><Fan size={14}/> Chłodzenie</h3>
-                {HARDWARE_ITEMS.cooling.map((item, idx) => {
-                    const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
-                    if (isLocked) return (
-                        <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
-                            <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane (Certyfikat)</span>
-                        </div>
-                    );
-                    return (
-                    <button
-                        key={item.id}
-                        onClick={() => buyHardware('cooling', idx + 1)}
-                        disabled={hardware.cooling >= idx + 1 || points < item.cost}
-                        className={`w-full p-3 rounded-lg border text-left transition-all relative overflow-hidden
-                            ${hardware.cooling >= idx + 1
-                            ? 'bg-cyan-500/10 border-cyan-500 opacity-50'
-                            : (points >= item.cost ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/20 border-white/5 opacity-50')}
-                        `}
-                    >
-                        <h4 className="font-bold text-white text-xs mb-1">{item.name}</h4>
-                        <div className="text-[10px] font-mono text-cyan-400 mb-1">{item.desc}</div>
-                        {hardware.cooling < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
-                    </button>
-                    );
-                })}
-            </div>
-
-            {/* POWER */}
-            <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><Plug size={14}/> Zasilanie</h3>
-                {HARDWARE_ITEMS.power.map((item, idx) => {
-                    const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
-                    if (isLocked) return (
-                        <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
-                            <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane (Certyfikat)</span>
-                        </div>
-                    );
-                    return (
-                    <button
-                        key={item.id}
-                        onClick={() => buyHardware('power', idx + 1)}
-                        disabled={hardware.power >= idx + 1 || points < item.cost}
-                        className={`w-full p-3 rounded-lg border text-left transition-all relative overflow-hidden
-                            ${hardware.power >= idx + 1
-                            ? 'bg-yellow-500/10 border-yellow-500 opacity-50'
-                            : (points >= item.cost ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/20 border-white/5 opacity-50')}
-                        `}
-                    >
-                        <h4 className="font-bold text-white text-xs mb-1">{item.name}</h4>
-                        <div className="text-[10px] font-mono text-yellow-400 mb-1">{item.desc}</div>
-                        {hardware.power < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
-                    </button>
-                    );
-                })}
-            </div>
-
-            {/* GPU */}
-            <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><CircuitBoard size={14}/> Karty Graficzne</h3>
-                {HARDWARE_ITEMS.gpu.map((item, idx) => {
-                    const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
-                    if (isLocked) return (
-                        <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
-                            <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane (Certyfikat)</span>
-                        </div>
-                    );
-                    return (
-                    <button
-                    key={item.id}
-                    onClick={() => buyHardware('gpu', idx + 1)}
-                    disabled={hardware.gpu >= idx + 1 || points < item.cost}
-                    className={`w-full p-3 rounded-lg border text-left transition-all relative overflow-hidden
-                        ${hardware.gpu >= idx + 1
-                        ? 'bg-green-500/10 border-green-500 opacity-50'
-                        : (points >= item.cost ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/20 border-white/5 opacity-50')}
-                    `}
-                    >
-                    <h4 className="font-bold text-white text-xs mb-1">{item.name}</h4>
-                    <div className="text-[10px] font-mono text-green-400 mb-1">Szansa Kryt: {Math.round(item.chance! * 100)}%</div>
-                    {hardware.gpu < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
-                    </button>
-                )})}
-            </div>
-
-            {/* CPU */}
-            <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-400 uppercase flex items-center gap-2"><Cpu size={14}/> Procesory</h3>
-                {HARDWARE_ITEMS.cpu.map((item, idx) => {
-                    const isLocked = idx >= 1 && !unlockedResearch.includes('it_certificate');
-                    if (isLocked) return (
-                        <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/20 opacity-50 flex items-center justify-center">
-                            <Lock size={12} className="mr-2 text-slate-500"/> <span className="text-[10px] text-slate-500">Zablokowane (Certyfikat)</span>
-                        </div>
-                    );
-                    return (
-                    <button
-                    key={item.id}
-                    onClick={() => buyHardware('cpu', idx + 1)}
-                    disabled={hardware.cpu >= idx + 1 || points < item.cost}
-                    className={`w-full p-3 rounded-lg border text-left transition-all relative overflow-hidden
-                        ${hardware.cpu >= idx + 1
-                        ? 'bg-blue-500/10 border-blue-500 opacity-50'
-                        : (points >= item.cost ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/20 border-white/5 opacity-50')}
-                    `}
-                    >
-                    <h4 className="font-bold text-white text-xs mb-1">{item.name}</h4>
-                    <div className="text-[10px] font-mono text-blue-400 mb-1">Moc Kryt: +{item.multiplier}x</div>
-                    {hardware.cpu < idx + 1 && <span className="font-mono text-xs text-slate-400">{item.cost.toLocaleString()}</span>}
-                    </button>
-                )})}
+                    </div>
+                </CategorySection>
             </div>
 
         </div>
     </div>
   );
+};
+
+// --- SUB-COMPONENTS ---
+
+const HardwareSlot = ({ icon: Icon, label, tier, color, glow, items }: any) => {
+    const itemName = tier > 0 ? items[tier-1].name : 'Brak';
+    
+    return (
+        <div className={`bg-slate-900/50 rounded-2xl border border-white/5 p-4 flex flex-col justify-between relative group hover:border-white/10 transition-all ${tier > 0 ? glow : ''}`}>
+            {tier > 0 && <div className={`absolute inset-0 bg-gradient-to-br ${color.replace('text-', 'from-')}/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl`} />}
+            
+            <div className="flex justify-between items-start mb-4 relative z-10">
+                <div className={`p-2 rounded-lg bg-black/40 ${tier > 0 ? color : 'text-slate-600'}`}>
+                    <Icon size={20} />
+                </div>
+                <span className="text-[10px] font-mono text-slate-500 uppercase">TIER {tier}</span>
+            </div>
+            
+            <div className="relative z-10">
+                <div className="text-xs text-slate-400 mb-1">{label}</div>
+                <div className={`font-bold text-sm leading-tight ${tier > 0 ? 'text-white' : 'text-slate-600'}`}>
+                    {itemName}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const CategorySection = ({ title, icon: Icon, children }: any) => (
+    <div>
+        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3 pl-2 border-l-4 border-[var(--theme-primary)]">
+            <Icon size={24} className="text-[var(--theme-primary)]" />
+            {title}
+        </h3>
+        {children}
+    </div>
+);
+
+const UpgradeGroup = ({ title, icon: Icon, items, currentTier, onBuy, points, locked, color }: any) => {
+    return (
+        <div className="bg-black/20 rounded-2xl border border-white/5 p-4 space-y-4">
+            <div className={`flex items-center gap-2 text-sm font-bold uppercase tracking-wider ${color}`}>
+                <Icon size={14} /> {title}
+            </div>
+            
+            <div className="space-y-2">
+                {items.map((item: any, idx: number) => {
+                    const tier = idx + 1;
+                    const isOwned = currentTier >= tier;
+                    const isNext = currentTier === tier - 1;
+                    const isLockedByResearch = locked && tier > 1; // Tier 1 always unlocked
+
+                    if (isLockedByResearch) {
+                        return (
+                            <div key={item.id} className="w-full p-3 rounded-lg border border-white/5 bg-black/40 flex items-center justify-center gap-2 text-slate-600 text-xs">
+                                <Lock size={12} /> Wymagany Certyfikat IT
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <button
+                            key={item.id}
+                            onClick={() => onBuy(tier)}
+                            disabled={isOwned || !isNext || points < item.cost}
+                            className={`w-full p-3 rounded-lg border text-left transition-all relative group
+                                ${isOwned 
+                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 cursor-default' 
+                                    : (isNext && points >= item.cost 
+                                        ? 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 text-white' 
+                                        : 'bg-black/20 border-white/5 text-slate-500 opacity-50 cursor-not-allowed')
+                                }
+                            `}
+                        >
+                            <div className="flex justify-between items-start mb-1">
+                                <span className="font-bold text-xs">{item.name}</span>
+                                {isOwned ? (
+                                    <span className="text-[10px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-400">POSIADANE</span>
+                                ) : (
+                                    <span className="font-mono text-xs opacity-70">{item.cost.toLocaleString()}</span>
+                                )}
+                            </div>
+                            
+                            <div className={`text-[10px] line-clamp-1 ${isOwned ? 'text-emerald-500/70' : 'text-slate-400'}`}>
+                                {item.effect ? `+${item.effect} Click` : 
+                                 item.multiplier ? `x${item.multiplier} Mnożnik` : 
+                                 item.chance ? `${Math.round(item.chance * 100)}% Szansa` :
+                                 item.desc || 'Ulepszenie sprzętowe'}
+                            </div>
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
+    );
 };
