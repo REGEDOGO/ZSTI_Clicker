@@ -186,7 +186,7 @@ export const Settings: React.FC = () => {
                             Biblioteka Utworów
                         </h3>
                         <span className="text-xs font-mono text-slate-500 bg-white/5 px-2 py-1 rounded border border-white/5">
-                            {ownedMusic.length} tracks
+                            {ownedMusic.length - 1} tracks
                         </span>
                     </div>
 
@@ -223,7 +223,7 @@ export const Settings: React.FC = () => {
                                                 <motion.div animate={{ height: [4, 8, 4] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-0.5 bg-black" />
                                             </div>
                                         ) : (
-                                            <span>{index + 1}</span>
+                                            <span>{index}</span>
                                         )}
                                     </div>
 
@@ -232,7 +232,7 @@ export const Settings: React.FC = () => {
                                         <div className={`font-bold text-sm truncate ${isActive ? 'text-[var(--theme-primary)]' : 'text-slate-200 group-hover:text-white'}`}>
                                             {track.name}
                                         </div>
-                                        <div className="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">Nierodka Records</div>
+                                        <div className="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">ZSTI Records</div>
                                     </div>
 
                                     {/* Duration */}

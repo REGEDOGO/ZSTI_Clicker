@@ -149,7 +149,7 @@ export const Hardware: React.FC = () => {
                             currentTier={hardware.mouse}
                             onBuy={(tier) => buyHardware('mouse', tier)}
                             points={points}
-                            locked={false}
+                            locked={!unlockedResearch.includes('it_certificate')}
                             color="text-emerald-400"
                         />
                         <UpgradeGroup 

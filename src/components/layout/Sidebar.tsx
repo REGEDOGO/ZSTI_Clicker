@@ -7,7 +7,8 @@ import {
   PieChart,
   FlaskConical,
   Server,
-  Users
+  Users,
+  Clover,
 } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 
@@ -53,6 +54,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
       >
         <Server size={28} />
         <span className="sr-only">Serwerownia</span>
+      </button>
+      <button
+        onClick={() => setActiveTab('casino')}
+        className={`p-3 rounded-xl transition-all ${activeTab === 'casino' ? 'bg-white/10' : 'text-slate-500 hover:text-slate-300'}`}
+        style={activeTab === 'casino' ? { color: 'var(--theme-primary)' } : {}}
+      >
+        <Clover size={28} />
+        <span className="sr-only">Kasyno</span>
       </button>
       <button
         onClick={() => setActiveTab('social')}

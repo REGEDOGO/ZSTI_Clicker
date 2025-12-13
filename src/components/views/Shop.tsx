@@ -13,9 +13,7 @@ export const Shop: React.FC = () => {
     buyTheme,
     buyMusic,
     ownedThemes,
-    ownedMusic,
-    unlockedResearch,
-    gamble
+    ownedMusic
   } = useGame();
 
   const [activeShopTab, setActiveShopTab] = useState('education');
@@ -64,26 +62,6 @@ export const Shop: React.FC = () => {
                         </span>
                     </button>
                 ))}
-            </div>
-        </div>
-
-        {/* --- CASINO BANNER --- */}
-        <div 
-            onClick={gamble}
-            className="mb-12 relative group rounded-2xl overflow-hidden cursor-pointer border border-red-500/20 bg-gradient-to-r from-red-950/50 to-slate-900/50 hover:border-red-500/50 transition-all duration-300"
-        >
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
-            <div className="relative z-10 p-6 flex items-center justify-between">
-                <div className="flex items-center gap-5">
-                    <div className="p-4 bg-red-500/20 rounded-xl border border-red-500/30 text-red-400 group-hover:scale-110 transition-transform">
-                        <Dices size={28} />
-                    </div>
-                    <div>
-                        <h3 className="text-xl font-bold text-white group-hover:text-red-300 transition-colors">Ryzykowna Inwestycja</h3>
-                        <p className="text-slate-400 text-sm">Postaw 10% majątku. Wygraj x2 albo stracisz.</p>
-                    </div>
-                </div>
-                <ArrowUpRight className="text-slate-500 group-hover:text-white group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" size={24} />
             </div>
         </div>
 

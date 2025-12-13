@@ -27,6 +27,7 @@ export interface ClickAnimation {
 
 export interface GameState {
   points: number;
+  setPoints: React.Dispatch<React.SetStateAction<number>>; // --- DODANO ---
   autoPoints: number;
   clickPower: number;
   totalClicks: number;
@@ -727,6 +728,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     handleClick, buyUpgrade, buyHardware, buyResearch, evolveItem, drinkCoffee, activateOverclock,
     handleInspekcjaClick, buyTheme, buyMusic, gamble, prestigeReset, hardReset,
+    
+    // --- NOWE: SET POINTS ---
+    setPoints, 
+    // ----------------------
 
     setActiveThemeId, setActiveMusicId, setVolume, setPanicMode, setHasNewLabItem,
     getCurrentRank, formatTime,

@@ -14,6 +14,7 @@ import { Achievements } from '../views/Achievements'; // Will create this too si
 import { Odometer } from '../ui/Odometer';
 import { SyncStatus } from '../ui/SyncStatus';
 import { NEWS_TICKER } from '../../data/gameData';
+import { Casino } from '../views/Casino';
 
 export const Layout: React.FC = () => {
   const {
@@ -208,6 +209,7 @@ export const Layout: React.FC = () => {
              {activeTab === 'shop' && <Shop key="shop" />}
              {activeTab === 'lab' && <Lab key="lab" />}
              {activeTab === 'hardware' && <Hardware key="hardware" />}
+             {activeTab === 'casino' && <Casino key="casino" />}
              {activeTab === 'social' && <Social key="social" />}
              {activeTab === 'profile' && <Profile key="profile" />}
              {activeTab === 'settings' && <Settings key="settings" />}
