@@ -9,6 +9,7 @@ import {
   Server,
   Users,
   Clover,
+  TrendingUp,
 } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 
@@ -54,6 +55,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
       >
         <Server size={28} />
         <span className="sr-only">Serwerownia</span>
+      </button>
+      <button
+        onClick={() => setActiveTab('market')}
+        className={`p-3 rounded-xl transition-all ${activeTab === 'market' ? 'bg-white/10' : 'text-slate-500 hover:text-slate-300'}`}
+        style={activeTab === 'market' ? { color: 'var(--theme-primary)' } : {}}
+      >
+        <TrendingUp size={28} />
+        <span className="sr-only">Giełda</span>
       </button>
       <button
         onClick={() => setActiveTab('casino')}

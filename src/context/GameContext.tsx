@@ -12,7 +12,8 @@ import {
   QUOTES,
   NEWS_TICKER,
   Upgrade,
-  RESEARCH_DATA
+  RESEARCH_DATA,
+  MARKET_STOCKS
 } from '../data/gameData';
 
 const SAVE_KEY = 'nierodka-save-v6';
@@ -61,6 +62,12 @@ export interface GameState {
   activeThemeId: string;
   activeMusicId: string;
   volume: number;
+
+  // --- MARKET ---
+  marketOwned: Record<string, number>;
+  marketPrices: Record<string, number>;
+  buyStock: (id: string, amount: number) => void;
+  sellStock: (id: string, amount: number) => void;
 
   // --- AUDIO & VISUALS ---
   isPlaying: boolean;
@@ -162,6 +169,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [activeThemeId, setActiveThemeId] = useState('default');
   const [activeMusicId, setActiveMusicId] = useState('track1');
   const [volume, setVolume] = useState(50);
+
+  // Market State
+  const [marketOwned, setMarketOwned] = useState<Record<string, number>>({});
+  const [marketPrices, setMarketPrices] = useState<Record<string, number>>(() => {
+    const initialPrices: Record<string, number> = {};
+    MARKET_STOCKS.forEach(s => initialPrices[s.id] = s.basePrice);
+    return initialPrices;
+  });
   
   // --- AUDIO LOGIC ---
   const [isPlaying, setIsPlaying] = useState(false);
@@ -319,6 +334,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setActiveThemeId(data.activeThemeId || 'default');
         setActiveMusicId(data.activeMusicId || 'track1');
         setVolume(data.volume ?? 50);
+        setMarketOwned(data.marketOwned || {});
+        // Opcjonalnie wczytujemy ceny, ale mogą się zresetować, co jest ok.
+        // Jeśli chcemy ciągłość cen:
+        if (data.marketPrices) setMarketPrices(data.marketPrices);
 
         if (data.upgrades) {
           const mergedUpgrades = SHOP_ITEMS.map(initial => {
@@ -356,11 +375,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       hardware, itemEvolutions, unlockedResearch,
       upgrades: upgrades.map(({ id, level, currentCost }) => ({ id, level, currentCost })),
       ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume,
-      maxCps, totalOverclocks
+      maxCps, totalOverclocks,
+      marketOwned, marketPrices
     };
     gameStateRef.current = data;
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-  }, [points, upgrades, hardware, itemEvolutions, unlockedResearch, ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume, totalClicks, totalEarnings, totalPlayTime, unlockedAchievements, prestigeLevel, maxCps, totalOverclocks]);
+  }, [points, upgrades, hardware, itemEvolutions, unlockedResearch, ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume, totalClicks, totalEarnings, totalPlayTime, unlockedAchievements, prestigeLevel, maxCps, totalOverclocks, marketOwned, marketPrices]);
 
   useEffect(() => {
     if (!user || !user.id) { setSyncStatus('offline'); return; }
@@ -474,6 +494,28 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 1000);
     return () => clearInterval(interval);
   }, [autoPoints, overclockTime, isCrashed, hardware.ram, isCoffeeUnlocked]);
+
+  // Market Price Update Loop
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMarketPrices(prev => {
+        const next = { ...prev };
+        MARKET_STOCKS.forEach(stock => {
+          const currentPrice = next[stock.id] || stock.basePrice;
+          const fluctuation = (Math.random() - 0.5) * 2 * stock.volatility;
+          let newPrice = currentPrice * (1 + fluctuation);
+
+          // Zabezpieczenia: min 10% ceny bazowej, max 10x ceny bazowej
+          if (newPrice < stock.basePrice * 0.1) newPrice = stock.basePrice * 0.1;
+          if (newPrice > stock.basePrice * 10) newPrice = stock.basePrice * 10;
+
+          next[stock.id] = newPrice;
+        });
+        return next;
+      });
+    }, 5000); // Aktualizacja cen co 5 sekund
+    return () => clearInterval(interval);
+  }, []);
 
   // Timers
   useEffect(() => {
@@ -663,6 +705,37 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const buyStock = (stockId: string, amount: number) => {
+    const price = marketPrices[stockId];
+    if (!price) return;
+    const cost = price * amount;
+
+    if (points >= cost) {
+      setPoints(p => p - cost);
+      setMarketOwned(prev => ({
+        ...prev,
+        [stockId]: (prev[stockId] || 0) + amount
+      }));
+    } else {
+      alert("Nie stać cię na te akcje!");
+    }
+  };
+
+  const sellStock = (stockId: string, amount: number) => {
+    const currentOwned = marketOwned[stockId] || 0;
+    if (currentOwned >= amount) {
+      const price = marketPrices[stockId];
+      const revenue = price * amount;
+      setPoints(p => p + revenue);
+      setMarketOwned(prev => ({
+        ...prev,
+        [stockId]: prev[stockId] - amount
+      }));
+    } else {
+      alert("Nie masz tylu akcji!");
+    }
+  };
+
   const gamble = () => {
     const bet = Math.floor(points * 0.1);
     if (bet < 10) { alert("Zbyt mało punktów, by ryzykować."); return; }
@@ -720,6 +793,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     upgrades, hardware, itemEvolutions, unlockedResearch, isCoffeeUnlocked, unlockedAchievements,
     ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume,
     
+    // Market
+    marketOwned, marketPrices, buyStock, sellStock,
+
     // Audio Exports
     isPlaying, toggleMusic, playNextTrack, playPrevTrack, loopNotification,
 
