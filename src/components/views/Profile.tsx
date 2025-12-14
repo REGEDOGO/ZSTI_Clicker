@@ -231,7 +231,7 @@ export const Profile: React.FC = () => {
             {/* LEFT COLUMN: COLLECTION */}
             <div className="space-y-4">
                 <h3 className="text-lg font-bold text-slate-400 uppercase tracking-widest px-2">Kolekcja</h3>
-                <StatCard icon={Music} label="Muzyka" value={`${ownedMusic.length} / ${totalMusic}`} color="text-pink-400" bg="bg-pink-500/5" border="border-pink-500/20" />
+                <StatCard icon={Music} label="Muzyka" value={`${ownedMusic.length - 1} / ${totalMusic}`} color="text-pink-400" bg="bg-pink-500/5" border="border-pink-500/20" />
                 <StatCard icon={Palette} label="Motywy" value={`${ownedThemes.length} / ${totalThemes}`} color="text-purple-400" bg="bg-purple-500/5" border="border-purple-500/20" />
                 <StatCard icon={Trophy} label="Osiągnięcia" value={`${unlockedAchievements.length} / ${totalAchievements}`} color="text-yellow-400" bg="bg-yellow-500/5" border="border-yellow-500/20" />
             </div>
