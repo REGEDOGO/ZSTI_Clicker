@@ -28,7 +28,7 @@ export interface ClickAnimation {
 
 export interface GameState {
   points: number;
-  setPoints: React.Dispatch<React.SetStateAction<number>>; // --- DODANO ---
+  setPoints: React.Dispatch<React.SetStateAction<number>>;
   autoPoints: number;
   clickPower: number;
   totalClicks: number;
@@ -64,8 +64,10 @@ export interface GameState {
   volume: number;
 
   // --- MARKET ---
+  marketInventory: Record<string, number>;
   marketOwned: Record<string, number>;
   marketPrices: Record<string, number>;
+  marketHistory: Record<string, number[]>;
   buyStock: (id: string, amount: number) => void;
   sellStock: (id: string, amount: number) => void;
 
@@ -177,12 +179,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     MARKET_STOCKS.forEach(s => initialPrices[s.id] = s.basePrice);
     return initialPrices;
   });
+  const [marketHistory, setMarketHistory] = useState<Record<string, number[]>>(() => {
+    const initialHistory: Record<string, number[]> = {};
+    MARKET_STOCKS.forEach(s => initialHistory[s.id] = [s.basePrice]);
+    return initialHistory;
+  });
   
   // --- AUDIO LOGIC ---
   const [isPlaying, setIsPlaying] = useState(false);
   const [loopNotification, setLoopNotification] = useState<{ visible: boolean; trackName: string } | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const activeMusicIdRef = useRef(activeMusicId); // Do trzymania aktualnego ID w event listenerze
+  const activeMusicIdRef = useRef(activeMusicId);
 
   // UI State
   const [clicks, setClicks] = useState<ClickAnimation[]>([]);
@@ -197,73 +204,46 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [crashTime, setCrashTime] = useState(0);
   const [currentIQ, setCurrentIQ] = useState(100);
 
-  // --- AUDIO SYSTEM IMPLEMENTATION ---
-  
-  // Update ref when state changes
+  // --- AUDIO SYSTEM ---
   useEffect(() => {
     activeMusicIdRef.current = activeMusicId;
   }, [activeMusicId]);
 
-  // 1. Initialization
   useEffect(() => {
     audioRef.current = new Audio();
-    audioRef.current.loop = false; // Disable native loop to handle 'ended' event manually
-
+    audioRef.current.loop = false;
     const handleEnded = () => {
         if (!audioRef.current) return;
-        
-        // Manual Loop
         audioRef.current.currentTime = 0;
         audioRef.current.play().catch(e => console.log("Loop play error:", e));
-
-        // Trigger Notification
         const track = MUSIC_TRACKS.find(t => t.id === activeMusicIdRef.current);
         if (track) {
             setLoopNotification({ visible: true, trackName: track.name });
-            setTimeout(() => setLoopNotification(null), 4000); // Hide after 4s
+            setTimeout(() => setLoopNotification(null), 4000);
         }
     };
-
     audioRef.current.addEventListener('ended', handleEnded);
-
-    return () => {
-        audioRef.current?.removeEventListener('ended', handleEnded);
-    };
+    return () => { audioRef.current?.removeEventListener('ended', handleEnded); };
   }, []);
 
-  // 2. Handle Track Change
   useEffect(() => {
     if (!audioRef.current) return;
-
     const track = MUSIC_TRACKS.find(t => t.id === activeMusicId);
     if (track) {
         audioRef.current.src = track.path;
         audioRef.current.volume = volume / 100;
-        
-        if (isPlaying) {
-            audioRef.current.play().catch(e => console.log("Audio play blocked/interrupted:", e));
-        }
+        if (isPlaying) { audioRef.current.play().catch(e => console.log("Audio play error:", e)); }
     }
   }, [activeMusicId]);
 
-  // 3. Handle Volume Change
   useEffect(() => {
-      if (audioRef.current) {
-          audioRef.current.volume = volume / 100;
-      }
+      if (audioRef.current) { audioRef.current.volume = volume / 100; }
   }, [volume]);
 
-  // 4. Controls
   const toggleMusic = () => {
     if (!audioRef.current) return;
-
-    if (isPlaying) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-    } else {
-        audioRef.current.play().catch(e => console.error("Play error:", e));
-        setIsPlaying(true);
-    }
+    if (isPlaying) { audioRef.current.pause(); setIsPlaying(false); }
+    else { audioRef.current.play().catch(e => console.error("Play error:", e)); setIsPlaying(true); }
   };
 
   const playNextTrack = () => {
@@ -280,17 +260,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsPlaying(true);
   };
 
-  // --- AUTH & LOAD/SAVE (Standard Logic) ---
+  // --- AUTH & LOAD/SAVE ---
   useEffect(() => {
     if (!user) {
-        if (!localStorage.getItem(SAVE_KEY)) {
-            setShowAuthModal(true);
-        } else {
-            setIsGuest(true);
-        }
+        if (!localStorage.getItem(SAVE_KEY)) { setShowAuthModal(true); }
+        else { setIsGuest(true); }
     } else {
-        setIsGuest(false);
-        setShowAuthModal(false);
+        setIsGuest(false); setShowAuthModal(false);
         if (user?.id) loadFromCloud(user.id);
     }
   }, [user]);
@@ -305,16 +281,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
              if (localSaved) {
                  const localData = JSON.parse(localSaved);
                  if ((localData.totalEarnings || 0) > (cloudData.totalEarnings || 0) + 1000) {
-                     if (!window.confirm("Znaleziono zapis w chmurze, ale lokalny wygląda na nowszy/lepszy. Czy na pewno chcesz wczytać chmurę?")) {
-                         useCloud = false;
-                     }
+                     if (!window.confirm("Znaleziono zapis w chmurze, ale lokalny wygląda na nowszy. Wczytać chmurę?")) { useCloud = false; }
                  }
              }
              if (useCloud) applySaveData(cloudData);
           }
-      } catch (e) {
-          console.error("Cloud load error:", e);
-      }
+      } catch (e) { console.error("Cloud load error:", e); }
   };
 
   const applySaveData = (data: any) => {
@@ -335,39 +307,29 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setActiveMusicId(data.activeMusicId || 'track1');
         setVolume(data.volume ?? 50);
         setMarketOwned(data.marketOwned || {});
-        // Opcjonalnie wczytujemy ceny, ale mogą się zresetować, co jest ok.
-        // Jeśli chcemy ciągłość cen:
         if (data.marketPrices) setMarketPrices(data.marketPrices);
+        if (data.marketHistory) setMarketHistory(data.marketHistory);
 
         if (data.upgrades) {
           const mergedUpgrades = SHOP_ITEMS.map(initial => {
             const savedUpgrade = data.upgrades.find((u: any) => u.id === initial.id);
-            if (savedUpgrade) {
-              return { ...initial, level: savedUpgrade.level, currentCost: savedUpgrade.currentCost };
-            }
+            if (savedUpgrade) { return { ...initial, level: savedUpgrade.level, currentCost: savedUpgrade.currentCost }; }
             return { ...initial, level: 0, currentCost: initial.baseCost };
           });
           setUpgrades(mergedUpgrades);
         }
   };
 
-  // Initial Local Load
   useEffect(() => {
     if (!user) {
         const saved = localStorage.getItem(SAVE_KEY);
         if (saved) {
-            try {
-                const data = JSON.parse(saved);
-                applySaveData(data);
-                setIsGuest(true);
-            } catch (e) {
-                console.error("Failed to load local save data", e);
-            }
+            try { applySaveData(JSON.parse(saved)); setIsGuest(true); }
+            catch (e) { console.error("Failed to load local save data", e); }
         }
     }
   }, [user]);
 
-  // Save Logic
   const gameStateRef = useRef<any>(null);
   useEffect(() => {
     const data = {
@@ -376,40 +338,33 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       upgrades: upgrades.map(({ id, level, currentCost }) => ({ id, level, currentCost })),
       ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume,
       maxCps, totalOverclocks,
-      marketOwned, marketPrices
+      marketOwned, marketPrices, marketHistory
     };
     gameStateRef.current = data;
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-  }, [points, upgrades, hardware, itemEvolutions, unlockedResearch, ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume, totalClicks, totalEarnings, totalPlayTime, unlockedAchievements, prestigeLevel, maxCps, totalOverclocks, marketOwned, marketPrices]);
+  }, [points, upgrades, hardware, itemEvolutions, unlockedResearch, ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume, totalClicks, totalEarnings, totalPlayTime, unlockedAchievements, prestigeLevel, maxCps, totalOverclocks, marketOwned, marketPrices, marketHistory]);
 
   useEffect(() => {
     if (!user || !user.id) { setSyncStatus('offline'); return; }
     const saveToCloud = async () => {
         if (!gameStateRef.current) return;
         setSyncStatus('syncing');
-        try {
-            await apiClient.saveGame(user.id, gameStateRef.current);
-            setSyncStatus('saved');
-        } catch (error) {
-            setSyncStatus('error');
-        }
+        try { await apiClient.saveGame(user.id, gameStateRef.current); setSyncStatus('saved'); }
+        catch (error) { setSyncStatus('error'); }
     };
     const intervalId = setInterval(saveToCloud, 30000);
     return () => clearInterval(intervalId);
   }, [user]);
 
-  // --- STATS CALCULATION ---
+  // --- LOGIC ---
   useEffect(() => {
     let baseClick = 1;
     let baseAuto = 0;
-
     upgrades.forEach(u => {
       let multiplier = 1;
       if (itemEvolutions[u.id as keyof typeof itemEvolutions]) {
         const evoTier = itemEvolutions[u.id as keyof typeof itemEvolutions];
-        if (ITEM_EVOLUTIONS[u.id] && ITEM_EVOLUTIONS[u.id][evoTier]) {
-           multiplier = ITEM_EVOLUTIONS[u.id][evoTier].multiplier;
-        }
+        if (ITEM_EVOLUTIONS[u.id]?.[evoTier]) { multiplier = ITEM_EVOLUTIONS[u.id][evoTier].multiplier; }
       }
       if (u.type === 'click') baseClick += (u.level * u.baseEffect * multiplier);
       if (u.type === 'auto') baseAuto += (u.level * u.baseEffect * multiplier);
@@ -451,10 +406,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setClickPower(Math.floor(baseClick * globalMultiplier));
     setAutoPoints(finalAuto);
     if (finalAuto > maxCps) setMaxCps(finalAuto);
-
   }, [upgrades, hardware, prestigeLevel, overclockTime, isCrashed, itemEvolutions, coffeeLevel, coffeeBuffEndTime, unlockedResearch, isCoffeeUnlocked, maxCps]);
 
-  // --- THEME & LOOPS ---
   useEffect(() => {
     const theme = THEMES[activeThemeId] || THEMES.default;
     const root = document.documentElement;
@@ -467,10 +420,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const interval = setInterval(() => {
       if (isCrashed) {
-         setCrashTime(prev => {
-           if (prev <= 1) { setIsCrashed(false); return 0; }
-           return prev - 1;
-         });
+         setCrashTime(prev => { if (prev <= 1) { setIsCrashed(false); return 0; } return prev - 1; });
          return;
       }
       setTotalPlayTime(t => t + 1);
@@ -495,7 +445,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => clearInterval(interval);
   }, [autoPoints, overclockTime, isCrashed, hardware.ram, isCoffeeUnlocked]);
 
-  // Market Price Update Loop
+  // Market Price & History Loop
   useEffect(() => {
     const interval = setInterval(() => {
       setMarketPrices(prev => {
@@ -504,87 +454,60 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const currentPrice = next[stock.id] || stock.basePrice;
           const fluctuation = (Math.random() - 0.5) * 2 * stock.volatility;
           let newPrice = currentPrice * (1 + fluctuation);
-
-          // Zabezpieczenia: min 10% ceny bazowej, max 10x ceny bazowej
           if (newPrice < stock.basePrice * 0.1) newPrice = stock.basePrice * 0.1;
           if (newPrice > stock.basePrice * 10) newPrice = stock.basePrice * 10;
-
           next[stock.id] = newPrice;
         });
         return next;
       });
-    }, 5000); // Aktualizacja cen co 5 sekund
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  // Timers
+  // Sync History
+  useEffect(() => {
+    if (Object.keys(marketPrices).length === 0) return;
+    setMarketHistory(prev => {
+      const next = { ...prev };
+      MARKET_STOCKS.forEach(stock => {
+        if (!next[stock.id]) next[stock.id] = [];
+        const currentPrice = marketPrices[stock.id];
+        if (currentPrice) {
+            const newHistory = [...next[stock.id], currentPrice];
+            if (newHistory.length > 50) newHistory.shift();
+            next[stock.id] = newHistory;
+        }
+      });
+      return next;
+    });
+  }, [marketPrices]);
+
+  // Misc Loops
   useEffect(() => {
     const interval = setInterval(() => {
-      if (Math.random() > 0.7) {
-        setActiveQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
-        setTimeout(() => setActiveQuote(null), 3000);
-      }
+      if (Math.random() > 0.7) { setActiveQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]); setTimeout(() => setActiveQuote(null), 3000); }
     }, 5000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setNewsIndex(prev => (prev + 1) % NEWS_TICKER.length);
-    }, 8000);
+    const interval = setInterval(() => { setNewsIndex(prev => (prev + 1) % NEWS_TICKER.length); }, 8000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => { setCurrentIQ(Math.floor(Math.random() * 150) + 50); }, 2000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentIQ(Math.floor(Math.random() * 150) + 50);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!inspekcjaVisible && !isCrashed && Math.random() < 0.05) {
-        setInspekcjaVisible(true);
-        setTimeout(() => setInspekcjaVisible(false), 10000);
-      }
+      if (!inspekcjaVisible && !isCrashed && Math.random() < 0.05) { setInspekcjaVisible(true); setTimeout(() => setInspekcjaVisible(false), 10000); }
     }, 10000);
     return () => clearInterval(interval);
   }, [inspekcjaVisible, isCrashed]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') setPanicMode(prev => !prev); };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  // Achievements Check
-  useEffect(() => {
-    const checkAchievements = setInterval(() => {
-      const newUnlocked: string[] = [];
-      if (!unlockedAchievements.includes('first_bell') && totalClicks >= 100) newUnlocked.push('first_bell');
-      if (!unlockedAchievements.includes('lemon_king')) {
-        const zbyszko = upgrades.find(u => u.id === 'zbyszko');
-        if (zbyszko && zbyszko.level > 0) newUnlocked.push('lemon_king');
-      }
-      if (!unlockedAchievements.includes('inflation') && totalEarnings >= 1000000) newUnlocked.push('inflation');
-      if (!unlockedAchievements.includes('ceo')) {
-        const tier1 = upgrades.filter(u => u.tier === 1);
-        if (tier1.every(u => u.level > 0)) newUnlocked.push('ceo');
-      }
-      if (!unlockedAchievements.includes('lab_rat')) {
-          if (Object.values(itemEvolutions).some(v => v > 0)) newUnlocked.push('lab_rat');
-      }
-      if (!unlockedAchievements.includes('coffee_addict') && totalCoffees >= 50) newUnlocked.push('coffee_addict');
-
-      if (newUnlocked.length > 0) {
-        setUnlockedAchievements(prev => [...prev, ...newUnlocked]);
-      }
-    }, 2000);
-    return () => clearInterval(checkAchievements);
-  }, [totalClicks, totalEarnings, upgrades, unlockedAchievements, itemEvolutions, totalCoffees]);
-
-  // Actions
+  // Game Actions
   const handleClick = (e: React.MouseEvent) => {
     if (isCrashed) return;
     let finalPoints = clickPower;
@@ -607,9 +530,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTotalClicks(tc => tc + 1);
     setTotalEarnings(te => te + finalPoints);
     const id = Date.now() + Math.random();
-    const x = e.clientX;
-    const y = e.clientY;
-    setClicks(prev => [...prev, { id, x, y, val: finalPoints, isCrit }]);
+    setClicks(prev => [...prev, { id, x: e.clientX, y: e.clientY, val: finalPoints, isCrit }]);
     setTimeout(() => { setClicks(prev => prev.filter(c => c.id !== id)); }, 1000);
   };
 
@@ -794,7 +715,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ownedThemes, ownedMusic, activeThemeId, activeMusicId, volume,
     
     // Market
-    marketOwned, marketPrices, buyStock, sellStock,
+    marketInventory: marketOwned,
+    marketOwned,
+    marketPrices,
+    marketHistory,
+    buyStock,
+    sellStock,
 
     // Audio Exports
     isPlaying, toggleMusic, playNextTrack, playPrevTrack, loopNotification,
@@ -805,10 +731,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     handleClick, buyUpgrade, buyHardware, buyResearch, evolveItem, drinkCoffee, activateOverclock,
     handleInspekcjaClick, buyTheme, buyMusic, gamble, prestigeReset, hardReset,
     
-    // --- NOWE: SET POINTS ---
     setPoints, 
-    // ----------------------
-
     setActiveThemeId, setActiveMusicId, setVolume, setPanicMode, setHasNewLabItem,
     getCurrentRank, formatTime,
     user, syncStatus, showAuthModal, setShowAuthModal, isGuest, setIsGuest
