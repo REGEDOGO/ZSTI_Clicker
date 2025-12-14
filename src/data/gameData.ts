@@ -79,6 +79,24 @@ export interface Achievement {
   icon: React.ElementType;
 }
 
+export interface MarketStock {
+  id: string;
+  name: string;
+  symbol: string;
+  desc: string;
+  basePrice: number;
+  volatility: number;
+}
+
+export const MARKET_STOCKS: MarketStock[] = [
+  { id: 'cheat_math', name: "Gotowiec z Matmy", symbol: "MAT", desc: "Zawsze w cenie przed sprawdzianem.", basePrice: 50, volatility: 0.1 },
+  { id: 'sick_leave', name: "Zwolnienie Lekarskie", symbol: "L4", desc: "Towar deficytowy w poniedziałki.", basePrice: 200, volatility: 0.15 },
+  { id: 'kebab', name: "Kebab na Grubym", symbol: "KEB", desc: "Waluta wymienna na wszystko.", basePrice: 500, volatility: 0.05 },
+  { id: 'homework', name: "Zadanie Domowe (Premium)", symbol: "HMW", desc: "Zrobione, nie spisane.", basePrice: 1000, volatility: 0.2 },
+  { id: 'answers', name: "Odpowiedzi do Matury", symbol: "MTR", desc: "Inwestycja wysokiego ryzyka.", basePrice: 5000, volatility: 0.3 },
+  { id: 'dignity', name: "Godność Ucznia", symbol: "DGN", desc: "Ciągle spada.", basePrice: 10000, volatility: 0.5 },
+];
+
 export const QUOTES = [
   "Siadaj, pała!",
   "To nie jest koncert życzeń",
