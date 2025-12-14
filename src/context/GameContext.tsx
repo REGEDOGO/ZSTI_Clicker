@@ -460,7 +460,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         return next;
       });
-    }, 5000);
+    }, 60000);
     return () => clearInterval(interval);
   }, []);
 

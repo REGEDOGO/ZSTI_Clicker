@@ -1,6 +1,10 @@
-import React, { act, useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
-import { Monitor, User, X, Zap, Eraser, MousePointer2, ArrowUpCircle, Sparkles, Crown, Flame, Star, Power, Moon, Activity, ArrowRight } from 'lucide-react';
+import { 
+  Monitor, User, X, Zap, Eraser, MousePointer2, ArrowUpCircle, 
+  Sparkles, Crown, Flame, Star, Power, Moon, Activity, ArrowRight,
+  PanelRightClose, PanelRightOpen // Dodane ikony
+} from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 import { ITEM_EVOLUTIONS } from '../../data/gameData';
 
@@ -33,6 +37,10 @@ export const Dashboard: React.FC = () => {
   
   const [particles, setParticles] = useState<Particle[]>([]);
   const [isAfkMode, setIsAfkMode] = useState(false);
+  
+  // NOWY STAN: Widoczność biurka (panelu po prawej)
+  const [isDeskVisible, setIsDeskVisible] = useState(true);
+
   const controls = useAnimation();
 
   // --- LOGIKA MNOŻNIKÓW EWOLUCJI ---
@@ -69,7 +77,7 @@ export const Dashboard: React.FC = () => {
           text: "text-white",
           shadow: "shadow-[0_0_30px_rgba(255,255,255,0.8)]",
           icon: <Crown size={12} className="text-yellow-300 animate-bounce" />,
-          label: "GODLIKE"
+          label: "SIGMA"
       };
       if (level >= 90) return {
           bg: "bg-red-900",
@@ -77,7 +85,7 @@ export const Dashboard: React.FC = () => {
           text: "text-red-200",
           shadow: "shadow-[0_0_20px_rgba(220,38,38,0.6)]",
           icon: <Flame size={12} className="text-red-500" />,
-          label: "MYTHIC"
+          label: "VANGUARD"
       };
       if (level >= 80) return {
           bg: "bg-orange-900",
@@ -85,7 +93,15 @@ export const Dashboard: React.FC = () => {
           text: "text-orange-200",
           shadow: "shadow-[0_0_15px_rgba(234,88,12,0.5)]",
           icon: <Star size={12} className="text-orange-400" />,
-          label: "LEGENDARY"
+          label: "GODLY"
+      };
+      if (level >= 70) return {
+          bg: "bg-cyan-900",
+          border: "border-cyan-500",
+          text: "text-cyan-200",
+          shadow: "shadow-[0_0_10px_rgba(6,182,212,0.4)]",
+          icon: <Zap size={12} className="text-cyan-400" />,
+          label: "MYTHIC"
       };
       if (level >= 60) return {
           bg: "bg-purple-900",
@@ -93,6 +109,14 @@ export const Dashboard: React.FC = () => {
           text: "text-purple-200",
           shadow: "shadow-[0_0_15px_rgba(147,51,234,0.5)]",
           icon: <Sparkles size={12} className="text-purple-400" />,
+          label: "LEGENDARY"
+      };
+      if (level >= 50) return {
+          bg: "bg-cyan-900",
+          border: "border-cyan-500",
+          text: "text-cyan-200",
+          shadow: "shadow-[0_0_10px_rgba(6,182,212,0.4)]",
+          icon: <Zap size={12} className="text-cyan-400" />,
           label: "EPIC"
       };
       if (level >= 40) return {
@@ -101,6 +125,14 @@ export const Dashboard: React.FC = () => {
           text: "text-cyan-200",
           shadow: "shadow-[0_0_10px_rgba(6,182,212,0.4)]",
           icon: <Zap size={12} className="text-cyan-400" />,
+          label: "SUPER RARE"
+      };
+      if (level >= 30) return {
+          bg: "bg-blue-900",
+          border: "border-blue-500",
+          text: "text-blue-200",
+          shadow: "shadow-[0_0_10px_rgba(6,182,212,0.4)]",
+          icon: <Zap size={8} className="text-blue-400" />,
           label: "RARE"
       };
       if (level >= 20) return {
@@ -195,7 +227,7 @@ export const Dashboard: React.FC = () => {
                     <div className="space-y-2">
                         <span className="text-sm font-mono text-slate-600 uppercase tracking-[0.5em] animate-pulse">System Oszczędzania Energii</span>
                         <div className="text-6xl md:text-8xl font-black text-[var(--theme-primary)] font-mono tabular-nums tracking-tighter opacity-80">
-                            {points.toLocaleString()}
+                            {Math.floor(points).toLocaleString()}
                         </div>
                     </div>
 
@@ -225,6 +257,7 @@ export const Dashboard: React.FC = () => {
     {/* --- NORMALNY DASHBOARD --- */}
     <div style={{ display: isAfkMode ? 'none' : 'block', height: '100%' }}>
         <motion.div
+        layout
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full relative"
@@ -232,7 +265,11 @@ export const Dashboard: React.FC = () => {
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none -z-10" />
 
             {/* --- LEWA KOLUMNA: REAKTOR --- */}
-            <div className="lg:col-span-5 flex flex-col items-center justify-center min-h-[60vh] lg:min-h-auto relative py-12">
+            {/* Dynamiczna szerokość: full width jeśli biurko schowane, inaczej 5 kolumn */}
+            <motion.div 
+                layout 
+                className={`${isDeskVisible ? 'lg:col-span-5' : 'lg:col-span-12'} flex flex-col items-center justify-center min-h-[60vh] lg:min-h-auto relative py-12 transition-all duration-500 ease-in-out`}
+            >
                 
                 <div className="absolute top-4 w-full flex justify-center px-4 z-20">
                     <AnimatePresence mode='wait'>
@@ -263,7 +300,7 @@ export const Dashboard: React.FC = () => {
 
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em] mb-1">Dostępne Środki</span>
                     <div className="text-5xl md:text-6xl font-black text-white font-mono tabular-nums tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-                        {points.toLocaleString()}
+                        {Math.floor(points).toLocaleString()}
                     </div>
                 </div>
 
@@ -335,95 +372,145 @@ export const Dashboard: React.FC = () => {
                         </motion.div>
                     ))}
                 </AnimatePresence>
-            </div>
+            </motion.div>
 
-            {/* --- PRAWA KOLUMNA: BIURKO --- */}
-            <div className="lg:col-span-7 flex flex-col gap-6">
-                
-                {/* Header */}
-                <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 flex justify-between items-center relative overflow-hidden shadow-lg">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-[var(--theme-primary)]" />
-                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                        <Monitor className="text-[var(--theme-primary)]" /> 
-                        <span className="tracking-wide">BIURKO NAUCZYCIELA</span>
-                    </h2>
-                    {unlockedResearch.includes('caffeine_research') && (
-                        <motion.button onClick={drinkCoffee} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="relative group flex items-center gap-3 bg-black/40 pr-4 rounded-xl border border-white/5 hover:border-[var(--theme-primary)]/50 transition-colors">
-                            <div className="w-10 h-14 relative bg-slate-800 rounded-b-xl rounded-t-sm border border-slate-600 m-2 overflow-hidden">
-                                <motion.div className="absolute bottom-0 w-full bg-[#5C4033]" initial={false} animate={{ height: `${coffeeLevel}%` }} />
-                                {coffeeLevel > 0 && <motion.div animate={{ y: [-10, -20], opacity: [0.6, 0] }} transition={{ repeat: Infinity, duration: 1.5 }} className="absolute -top-3 left-1/2 w-1 h-2 bg-white/30 rounded-full blur-[1px]" />}
-                            </div>
-                            <div className="text-right">
-                                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Kofeina</div>
-                                <div className={`text-lg font-mono font-bold ${coffeeLevel < 20 ? 'text-red-500 animate-pulse' : 'text-[var(--theme-primary)]'}`}>{Math.floor(coffeeLevel)}%</div>
-                            </div>
-                        </motion.button>
-                    )}
-                </div>
+            {/* --- PRZYCISK OTWIERANIA PANELU (Gdy jest zamknięty) --- */}
+            {!isDeskVisible && (
+                <motion.div 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="fixed right-0 top-1/2 -translate-y-1/2 z-50"
+                >
+                    <button
+                        onClick={() => setIsDeskVisible(true)}
+                        className="bg-slate-800 border-l border-y border-white/20 p-3 rounded-l-xl shadow-xl hover:bg-slate-700 text-[var(--theme-primary)] transition-all hover:pr-5 group"
+                    >
+                        <PanelRightOpen size={24} className="group-hover:-translate-x-1 transition-transform" />
+                    </button>
+                </motion.div>
+            )}
 
-                {/* GRID PRZEDMIOTÓW (KARTY) */}
-                <div className="flex-1 bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-3xl p-4 overflow-y-auto custom-scrollbar min-h-[400px]">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        {upgrades.filter(u => u.level > 0).map(u => {
-                            const evolvedName = getEvolutionName(u.id);
-                            const evolvedImg = getEvolutionImage(u.id);
-                            const finalName = evolvedName || u.name;
-                            const finalImg = evolvedImg || u.deskImage;
-                            const levelStyle = getLevelVisuals(u.level);
-                            
-                            // Obliczanie wartości po ewolucji (DLA GRID)
-                            const multiplier = getEvolutionMultiplier(u.id);
-                            const totalEffect = u.level * u.baseEffect * multiplier;
+            {/* --- PRAWA KOLUMNA: BIURKO (CHOWANE) --- */}
+            <AnimatePresence mode='wait'>
+            {isDeskVisible && (
+                <motion.div 
+                    layout
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 50 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="lg:col-span-7 flex flex-col gap-6 h-full"
+                >
+                    
+                    {/* Header */}
+                    <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 flex justify-between items-center relative overflow-hidden shadow-lg">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-[var(--theme-primary)]" />
+                        
+                        <div className="flex items-center gap-4">
+                            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                                <Monitor className="text-[var(--theme-primary)]" /> 
+                                <span className="tracking-wide">BIURKO NAUCZYCIELA</span>
+                            </h2>
+                        </div>
 
-                            return (
-                                <motion.button
-                                    key={u.id}
-                                    onClick={() => setSelectedUpgradeId(u.id)}
-                                    whileHover={{ y: -5, scale: 1.02 }}
-                                    className={`group relative aspect-[4/5] bg-slate-900 border rounded-2xl overflow-hidden shadow-lg transition-all ${u.level >= 50 ? 'border-[var(--theme-primary)]/50' : 'border-white/10'}`}
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-br from-[var(--theme-primary)]/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                                    <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-start z-10">
-                                        <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase border flex items-center gap-1 backdrop-blur-sm
-                                            ${u.type === 'click' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-blue-500/20 text-blue-400 border-blue-500/30'}
-                                        `}>
-                                            {u.type === 'click' ? <MousePointer2 size={10} /> : <Zap size={10} />}
-                                            {u.type === 'click' ? 'AKT' : 'PAS'}
-                                        </div>
-                                        
-                                        <div className={`text-[10px] font-mono px-1.5 py-0.5 rounded border backdrop-blur-sm flex items-center gap-1 ${levelStyle.bg} ${levelStyle.border} ${levelStyle.text} ${levelStyle.shadow}`}>
-                                            {levelStyle.icon} LVL {u.level}
-                                        </div>
+                        <div className="flex items-center gap-4">
+                            {unlockedResearch.includes('caffeine_research') && (
+                                <motion.button onClick={drinkCoffee} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="relative group flex items-center gap-3 bg-black/40 pr-4 rounded-xl border border-white/5 hover:border-[var(--theme-primary)]/50 transition-colors">
+                                    <div className="w-10 h-14 relative bg-slate-800 rounded-b-xl rounded-t-sm border border-slate-600 m-2 overflow-hidden">
+                                        <motion.div className="absolute bottom-0 w-full bg-[#5C4033]" initial={false} animate={{ height: `${coffeeLevel}%` }} />
+                                        {coffeeLevel > 0 && <motion.div animate={{ y: [-10, -20], opacity: [0.6, 0] }} transition={{ repeat: Infinity, duration: 1.5 }} className="absolute -top-3 left-1/2 w-1 h-2 bg-white/30 rounded-full blur-[1px]" />}
                                     </div>
-
-                                    <div className="absolute inset-0 flex items-center justify-center p-4">
-                                        <div className={`absolute w-2/3 h-2/3 bg-white/5 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity ${u.level >= 100 ? 'bg-gradient-to-r from-red-500 to-blue-500 opacity-50' : ''}`} />
-                                        <img 
-                                            src={finalImg} 
-                                            alt={finalName} 
-                                            className={`w-3/4 h-3/4 object-contain drop-shadow-2xl transition-transform duration-300 group-hover:scale-110 z-10 ${u.level > 50 ? 'filter contrast-125' : ''}`} 
-                                        />
-                                    </div>
-
-                                    <div className="absolute bottom-0 left-0 w-full bg-black/80 backdrop-blur-md border-t border-white/10 p-3 z-20">
-                                        <div className="text-xs font-bold text-white truncate mb-0.5">{finalName}</div>
-                                        <div className="text-[10px] text-[var(--theme-primary)] font-mono">
-                                            +{totalEffect.toLocaleString()} {u.type === 'auto' ? '/s' : 'moc'}
-                                        </div>
+                                    <div className="text-right">
+                                        <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Kofeina</div>
+                                        <div className={`text-lg font-mono font-bold ${coffeeLevel < 20 ? 'text-red-500 animate-pulse' : 'text-[var(--theme-primary)]'}`}>{Math.floor(coffeeLevel)}%</div>
                                     </div>
                                 </motion.button>
-                            );
-                        })}
-                        {upgrades.every(u => u.level === 0) && (
-                            <div className="col-span-full h-64 flex flex-col items-center justify-center text-slate-600 gap-4 border-2 border-dashed border-slate-800 rounded-2xl">
-                                <Monitor size={48} className="opacity-20" />
-                                <p className="text-sm uppercase tracking-widest opacity-50">Biurko jest puste</p>
-                            </div>
-                        )}
+                            )}
+                            
+                            {/* PRZYCISK ZAMYKANIA PANELU */}
+                            <button 
+                                onClick={() => setIsDeskVisible(false)}
+                                className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors"
+                                title="Schowaj biurko"
+                            >
+                                <PanelRightClose size={20} />
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </div>
+
+                    {/* GRID PRZEDMIOTÓW (KARTY) + CUSTOM SCROLL */}
+                    <div className="flex-1 bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-3xl p-4 overflow-y-auto min-h-[400px]
+                        [&::-webkit-scrollbar]:w-2
+                        [&::-webkit-scrollbar-track]:bg-slate-900/50
+                        [&::-webkit-scrollbar-track]:rounded-full
+                        [&::-webkit-scrollbar-thumb]:bg-slate-700
+                        [&::-webkit-scrollbar-thumb]:rounded-full
+                        [&::-webkit-scrollbar-thumb]:hover:bg-[var(--theme-primary)]
+                        [&::-webkit-scrollbar-thumb]:transition-colors"
+                    >
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            {upgrades.filter(u => u.level > 0).map(u => {
+                                const evolvedName = getEvolutionName(u.id);
+                                const evolvedImg = getEvolutionImage(u.id);
+                                const finalName = evolvedName || u.name;
+                                const finalImg = evolvedImg || u.deskImage;
+                                const levelStyle = getLevelVisuals(u.level);
+                                
+                                // Obliczanie wartości po ewolucji (DLA GRID)
+                                const multiplier = getEvolutionMultiplier(u.id);
+                                const totalEffect = u.level * u.baseEffect * multiplier;
+
+                                return (
+                                    <motion.button
+                                        key={u.id}
+                                        onClick={() => setSelectedUpgradeId(u.id)}
+                                        whileHover={{ y: -5, scale: 1.02 }}
+                                        className={`group relative aspect-[4/5] bg-slate-900 border rounded-2xl overflow-hidden shadow-lg transition-all ${u.level >= 50 ? 'border-[var(--theme-primary)]/50' : 'border-white/10'}`}
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-br from-[var(--theme-primary)]/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                                        <div className="absolute top-0 left-0 w-full p-2 flex justify-between items-start z-10">
+                                            <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase border flex items-center gap-1 backdrop-blur-sm
+                                                ${u.type === 'click' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-blue-500/20 text-blue-400 border-blue-500/30'}
+                                            `}>
+                                                {u.type === 'click' ? <MousePointer2 size={10} /> : <Zap size={10} />}
+                                                {u.type === 'click' ? 'AKT' : 'PAS'}
+                                            </div>
+                                            
+                                            <div className={`text-[10px] font-mono px-1.5 py-0.5 rounded border backdrop-blur-sm flex items-center gap-1 ${levelStyle.bg} ${levelStyle.border} ${levelStyle.text} ${levelStyle.shadow}`}>
+                                                {levelStyle.icon} LVL {u.level}
+                                            </div>
+                                        </div>
+
+                                        <div className="absolute inset-0 flex items-center justify-center p-4">
+                                            <div className={`absolute w-2/3 h-2/3 bg-white/5 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity ${u.level >= 100 ? 'bg-gradient-to-r from-red-500 to-blue-500 opacity-50' : ''}`} />
+                                            <img 
+                                                src={finalImg} 
+                                                alt={finalName} 
+                                                className={`w-3/4 h-3/4 object-contain drop-shadow-2xl transition-transform duration-300 group-hover:scale-110 z-10 ${u.level > 50 ? 'filter contrast-125' : ''}`} 
+                                            />
+                                        </div>
+
+                                        <div className="absolute bottom-0 left-0 w-full bg-black/80 backdrop-blur-md border-t border-white/10 p-3 z-20">
+                                            <div className="text-xs font-bold text-white truncate mb-0.5">{finalName}</div>
+                                            <div className="text-[10px] text-[var(--theme-primary)] font-mono">
+                                                +{totalEffect.toLocaleString()} {u.type === 'auto' ? '/s' : 'moc'}
+                                            </div>
+                                        </div>
+                                    </motion.button>
+                                );
+                            })}
+                            {upgrades.every(u => u.level === 0) && (
+                                <div className="col-span-full h-64 flex flex-col items-center justify-center text-slate-600 gap-4 border-2 border-dashed border-slate-800 rounded-2xl">
+                                    <Monitor size={48} className="opacity-20" />
+                                    <p className="text-sm uppercase tracking-widest opacity-50">Biurko jest puste</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+            </AnimatePresence>
 
             {/* --- MODAL (SZCZEGÓŁY ULEPSZENIA - LIVE DATA) --- */}
             <AnimatePresence>
@@ -486,7 +573,7 @@ export const Dashboard: React.FC = () => {
                                         +{activeUpgrade.baseEffect * getEvolutionMultiplier(activeUpgrade.id) * activeUpgrade.level}
                                         <ArrowRight size={16} className="text-slate-500 mx-1" />
                                         <span className="text-green-400">
-                                             +{activeUpgrade.baseEffect * getEvolutionMultiplier(activeUpgrade.id) * (activeUpgrade.level + 1)}
+                                                +{activeUpgrade.baseEffect * getEvolutionMultiplier(activeUpgrade.id) * (activeUpgrade.level + 1)}
                                         </span>
                                     </div>
                                     <div className="text-[10px] text-[var(--theme-primary)]/70 uppercase z-10">
@@ -500,7 +587,7 @@ export const Dashboard: React.FC = () => {
                                 onClick={() => buyUpgrade(activeUpgrade.id)}
                                 disabled={points < activeUpgrade.currentCost}
                                 className={`w-full group relative py-5 rounded-2xl font-bold text-lg overflow-hidden transition-all shadow-xl
-                                    ${points >= activeUpgrade.currentCost 
+                                    {points >= activeUpgrade.currentCost 
                                         ? 'text-black hover:scale-[1.02] active:scale-[0.98]' 
                                         : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5'
                                     }

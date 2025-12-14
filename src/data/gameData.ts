@@ -95,6 +95,21 @@ export const MARKET_STOCKS: MarketStock[] = [
   { id: 'homework', name: "Zadanie Domowe (Premium)", symbol: "HMW", desc: "Zrobione, nie spisane.", basePrice: 1000, volatility: 0.2 },
   { id: 'answers', name: "Odpowiedzi do Matury", symbol: "MTR", desc: "Inwestycja wysokiego ryzyka.", basePrice: 5000, volatility: 0.3 },
   { id: 'dignity', name: "Godność Ucznia", symbol: "DGN", desc: "Ciągle spada.", basePrice: 10000, volatility: 0.5 },
+  { id: 'stk_1', name: 'Złote Oceny SA', symbol: 'OCN', basePrice: 50000, volatility: 0.1, desc: 'Stabilny wzrost przed wywiadówką.' },
+  { id: 'stk_2', name: 'Sklepik Szkolny', symbol: 'BUŁ', basePrice: 100000, volatility: 0.2, desc: 'Wysoki popyt na drożdżówki.' },
+  { id: 'stk_3', name: 'Futures na Wagary', symbol: 'WGR', basePrice: 250000, volatility: 0.45, desc: 'Ryzykowne, ale opłacalne wiosną.' },
+  { id: 'stk_4', name: 'Krypto Kreda', symbol: 'KRD', basePrice: 1500000, volatility: 0.8, desc: 'Krucha waluta, łatwo się łamie.' },
+  { id: 'stk_5', name: 'Fundusz Ściąg', symbol: 'ŚCG', basePrice: 300000, volatility: 0.15, desc: 'Niezbędne podczas sesji egzaminacyjnej.' },
+  { id: 'stk_6', name: 'Obligacje Dyrektorskie', symbol: 'DYR', basePrice: 150000, volatility: 0.05, desc: 'Nudne, ale bezpieczne jak gabinet.' },
+  { id: 'stk_7', name: 'Indeks Pracy Domowej', symbol: 'HWRK', basePrice: 7500000, volatility: 0.25, desc: 'Spada w weekendy, rośnie w poniedziałki.' },
+  { id: 'stk_8', name: 'Tech Sprawdziany', symbol: 'TEST', basePrice: 1500000, volatility: 0.3, desc: 'Zależne od humoru nauczyciela.' },
+  { id: 'stk_9', name: 'Lobby Biblioteczne', symbol: 'BOOK', basePrice: 4000000, volatility: 0.02, desc: 'Cisza i spokój na rynku.' },
+  { id: 'stk_10', name: 'WF Futures', symbol: 'GYM', basePrice: 8000000, volatility: 0.35, desc: 'Zmienność zależy od obecności stroju.' },
+  { id: 'stk_11', name: 'Klub Szachowy', symbol: 'ELO', basePrice: 500000, volatility: 0.1, desc: 'Dla inwestorów długoterminowych.' },
+  { id: 'stk_12', name: 'Giełda Kanapek', symbol: 'SNDW', basePrice: 2500, volatility: 0.4, desc: 'Wymiana barterowa na przerwach.' },
+  { id: 'stk_13', name: 'Spółdzielnia Uczniowska', symbol: 'SU', basePrice: 120000, volatility: 0.15, desc: 'Zarządzana przez samorząd.' },
+  { id: 'stk_14', name: 'Papier Toaletowy Group', symbol: 'WC', basePrice: 1000000, volatility: 0.9, desc: 'Towar deficytowy, ekstremalne wahania.' },
+  { id: 'stk_15', name: 'Automaty z Kawą', symbol: 'KAWA', basePrice: 600000000, volatility: 0.2, desc: 'Paliwo dla maturzystów.' },
 ];
 
 export const QUOTES = [
@@ -656,152 +671,144 @@ export interface MusicTrack {
 }
 
 export const MUSIC_TRACKS: MusicTrack[] = [
-  // --- TIER 0: DARMOWE ---
   { 
     id: 'co_bylo_na_jutro', 
     name: "Co Było Na Jutro?", 
     path: '/music/CoByloNaJutro.mp3', 
-    cost: 0 
+    cost: 100 
   },
   
-  // --- TIER 1: POCZĄTEK (5k - 20k) ---
   { 
     id: 'dluga_przerwa', 
     name: "Długa Przerwa", 
     path: '/music/DlugaPrzerwa.mp3', 
-    cost: 1 
+    cost: 1000 
   },
   { 
     id: 'niezapowiedziana_kartkowka', 
     name: "Niezapowiedziana Kartkówka", 
     path: '/music/NiezapowiedzianeKartkowka.mp3', 
-    cost: 1
+    cost: 20000
   },
   { 
     id: 'godzina_przed', 
     name: "Godzina Przed Sprawdzianem", 
     path: '/music/GodzinaPrzedSprawdzianem.mp3', 
-    cost: 1 
+    cost: 150000 
   },
   { 
     id: 'piata_klasa', 
     name: "Piąta Klasa", 
     path: '/music/PiataKlasa.mp3', 
-    cost: 1 
+    cost: 1000000 
   },
-
-  // --- TIER 2: ŚRODEK SEMESTRU (25k - 75k) ---
   { 
     id: 'pierwsza_klasa', 
     name: "Pierwsza Klasa", 
     path: '/music/PierwszaKlasa.mp3', 
-    cost: 1 
+    cost: 5000000
   },
   { 
     id: 'przerwa_swiateczna', 
     name: "Przerwa Świąteczna", 
     path: '/music/PrzerwaSwiateczna.mp3', 
-    cost: 1 
+    cost: 10000000
   },
   { 
     id: 'podstawy_podstaw', 
     name: "Podstawy Podstaw", 
     path: '/music/PodstawyPodstaw.mp3', 
-    cost: 1 
+    cost: 25000000
   },
   { 
     id: 'egzamin_zawodowy', 
     name: "Egzamin Zawodowy", 
     path: '/music/EgzaminZawodowy.mp3', 
-    cost: 1 
+    cost: 50000000
   },
   { 
     id: 'praktyki', 
     name: "Praktyki", 
     path: '/music/Praktyki.mp3', 
-    cost: 1 
+    cost: 100000000
   },
   { 
     id: 'funkcja_kwadratowa', 
     name: "Delta Ujemna", 
     path: '/music/FunkcjaKwadratowa.mp3', 
-    cost: 1 
+    cost: 1000000000
   },
-
-  // --- TIER 3: LEGENDY SZKOLNE (100k - 500k) ---
   { 
     id: 'legenda_gaming_night', 
     name: "Legenda Gaming Night", 
     path: '/music/LegendaGamingNight.mp3', 
-    cost: 1 
+    cost: 400000000
   },
   { 
     id: 'mundial', 
     name: "Mundial na Lekcji", 
     path: '/music/Mundial.mp3', 
-    cost: 1 
+    cost: 1000000000
   },
   { 
     id: 'sala_202', 
     name: "Tajemnica Sali 202", 
     path: '/music/Sala202.mp3', 
-    cost: 1 
+    cost: 25000000000
   },
   { 
     id: 'sala_314', 
     name: "Sala 314", 
     path: '/music/Sala314.mp3', 
-    cost: 1 
+    cost: 100000000000
   },
   { 
     id: 'pisanie_bez_chata', 
     name: "Pisanie Kodu Bez Chata", 
     path: '/music/PisanieBezChata.mp3', 
-    cost: 1 
+    cost: 500000000000 
   },
   { 
     id: 'pawel_parzy', 
     name: "Paweł Parzy", 
     path: '/music/PawelParzy.mp3', 
-    cost: 1 
+    cost: 1000000000000 
   },
   { 
     id: 'na_logike', 
     name: '"Na Logikę" Kiedy Pierwsze Zadanie', 
     path: '/music/NaLogikeKiedyPierwszeZadanie.mp3', 
-    cost: 1 
+    cost: 10000000000000
   },
   { 
     id: 'usuwanie_komentarzy', 
     name: "Usuwanie Komentarzy z Kodu", 
     path: '/music/UsuwanieKomentarzyZKodu.mp3', 
-    cost: 1 
+    cost: 90000000000000
   },
   { 
     id: 'szpont', 
     name: "Szpont", 
     path: '/music/Szpont.mp3', 
-    cost: 1 
+    cost: 500000000000000
   },
-
-  // --- TIER 4: ABSOLUTNY ENDGAME (1M+) ---
   { 
     id: 'niezapowiedziana_matura', 
     name: "Niezapowiedziana Matura", 
     path: '/music/NiezapowiedzianaMatura.mp3', 
-    cost: 1 
+    cost: 2500000000000000
   },
   { 
     id: 'lipiec_sierpien', 
     name: "Lipiec i Sierpień", 
     path: '/music/LipiecSierpien.mp3', 
-    cost: 1 
+    cost: 10000000000000000
   },
   { 
     id: 'piwnica', 
     name: "Piwnica", 
     path: '/music/Piwnica.mp3', 
-    cost: 1 
+    cost: 100000000000000000
   }
 ];
 
